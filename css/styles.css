@@ -11,15 +11,20 @@
 :root {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  --color-text-primary:   #1f1f1d;
-  --color-text-secondary: #66665f;
-  --color-text-tertiary:  #a3a39a;
+  /* Dark theme matched to the association's Squarespace site */
+  --color-background:     #3e3d3d;  /* site main background */
+  --color-accent:         #8e7462;  /* site contrast color — active buttons, highlights */
+  --color-accent-text:    #ffffff;
 
-  --color-border-primary:   #c4c4bc;
-  --color-border-secondary: #d8d8d1;
-  --color-border-tertiary:  #e7e7e1;
+  --color-text-primary:   #f0efed;
+  --color-text-secondary: #b3b0ab;
+  --color-text-tertiary:  #7d7a76;
 
-  --color-background-secondary: #f0f0ec;
+  --color-border-primary:   #6a6764;
+  --color-border-secondary: #575553;
+  --color-border-tertiary:  #4c4a48;
+
+  --color-background-secondary: #4a4846;
 
   --border-radius-md: 6px;
   --border-radius-lg: 10px;
@@ -29,6 +34,7 @@
 
 body {
   font-family: var(--font-sans);
+  background: var(--color-background);
   color: var(--color-text-primary);
   padding: 1rem;
   font-size: 13px;
@@ -45,12 +51,14 @@ body {
   border: 0;
 }
 
-h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
+/* Header block is centered; nav and tables stay left-aligned */
+h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; text-align: center; }
 
 .subtitle {
   font-size: 12px;
   color: var(--color-text-secondary);
   margin-bottom: 1.25rem;
+  text-align: center;
 }
 
 /* Error banner — hidden unless the live data fetch fails */
@@ -58,10 +66,10 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
   font-size: 12px;
   padding: 8px 12px;
   margin-bottom: 1rem;
-  border: 0.5px solid #e0b4b4;
+  border: 0.5px solid #7a4a4a;
   border-radius: var(--border-radius-md);
-  background: #fdf3f3;
-  color: #7a2e2e;
+  background: #4a2f2f;
+  color: #e8b4b4;
   word-break: break-all;
 }
 
@@ -106,9 +114,9 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
 }
 .nav-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
 .nav-btn.active {
-  background: var(--color-background-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-primary);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
   font-weight: 500;
 }
 
@@ -131,8 +139,8 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
 }
 .view-btn:hover { background: var(--color-background-secondary); }
 .view-btn.active {
-  background: var(--color-background-secondary);
-  color: var(--color-text-primary);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
   font-weight: 500;
 }
 .view-btn + .view-btn { border-left: 0.5px solid var(--color-border-secondary); }

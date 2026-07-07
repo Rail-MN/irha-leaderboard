@@ -11,11 +11,15 @@
    override our classes — inline styles win those fights.
    ============================================================ */
 
-/** Format a score for display: always one decimal (70.0, never 70) */
-function fmtScore(s) { return s === null ? null : s.toFixed(1); }
-
-/** Format points for display: one decimal */
-function fmtPts(p) { return p === null ? null : p.toFixed(1); }
+/**
+ * Number formatting for scores and points: whole numbers display bare
+ * (70, 9, 0), fractional values show up to two accurate decimals
+ * (69.5, 0.75, 0.14). toFixed(2) rounds to 2 places; parseFloat then
+ * strips any trailing zeros ("9.50" → 9.5, "70.00" → 70).
+ */
+function fmtNum(v) { return v === null ? null : String(parseFloat(v.toFixed(2))); }
+const fmtScore = fmtNum;
+const fmtPts = fmtNum;
 
 /** Gold / silver / bronze circle for 1–3, plain number otherwise */
 function rankBadge(r) {
@@ -26,14 +30,15 @@ function rankBadge(r) {
 }
 
 /** Alternating row shading (inline — see embedding note above) */
-const BG_EVEN = '#f7f7f5';
+const BG_EVEN = '#454443';   /* slightly lighter than the dark page bg */
 const BG_ODD = 'transparent';
 
-/** Opening <tr> tag with shading, DNQ dimming, and hover brightening */
+/** Opening <tr> tag with shading, DNQ dimming, and hover brightening.
+    On a dark theme, hover BRIGHTENS (>1) — on light it darkened (<1). */
 function rowOpenTag(bg, dnq) {
   const op = dnq ? '0.5' : '1';
   return `<tr style="background:${bg};opacity:${op}"` +
-    ` onmouseover="this.style.filter='brightness(0.95)'"` +
+    ` onmouseover="this.style.filter='brightness(1.25)'"` +
     ` onmouseout="this.style.filter=''">`;
 }
 

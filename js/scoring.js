@@ -153,7 +153,78 @@ function rankRows(rows) {
   return [...q, ...u];
 }
 
+
+/* ============================================================
+   GREEN AS GRASS — special scoring
+   ============================================================
+   GaG has no year-end standings. Instead, RIDERS (not rider+horse
+   combos) accumulate points toward a 50-point "graduation" and a
+   belt buckle. Per-show scoring differs from standard classes:
+
+   - Placing points: 1st = 8, 2nd = 7 ... 8th = 1, 9th+ = 0.
+     Ties pool and split, same mechanism as standard classes.
+   - Beat bonus: riders with a score ABOVE 0 also earn 0.5 points
+     per rider they beat (strictly lower score, including riders
+     who scored 0) in that show.
+   - Zero scores: shown with their (last) placement, but earn
+     nothing — no placing points, no bonus.
+   ============================================================ */
+
+/** GaG placing points: 1st = 8 ... 8th = 1, 9th+ = 0 */
+const GAG_PLACE_PTS = [8, 7, 6, 5, 4, 3, 2, 1];
+
+/** Bonus per rider beaten (score strictly lower), only for scores > 0 */
+const GAG_BEAT_BONUS = 0.5;
+
+/**
+ * Green as Grass placement and points for ONE show.
+ * Same shape as getPlacePts, so future views can swap it in per class.
+ */
+function getPlacePtsGreenAsGrass(entries, showIdx) {
+  // Unlike standard classes, zero scores ARE ranked here (they take
+  // last place) — they just earn no points.
+  const present = entries
+    .map((e, i) => ({ i, s: e.scores[showIdx] }))
+    .filter(x => x.s !== null);
+  present.sort((a, b) => b.s - a.s);
+
+  const pts = new Array(entries.length).fill(null);
+  const place = new Array(entries.length).fill(null);
+
+  let j = 0;
+  while (j < present.length) {
+    const s = present[j].s;
+    let k = j;
+    while (k < present.length && present[k].s === s) k++;
+
+    const cnt = k - j;
+    const pos = j + 1;
+
+    // Pool placing points across the tie group's places, split evenly
+    let base = 0;
+    for (let p = pos; p < pos + cnt; p++) {
+      if (p <= GAG_PLACE_PTS.length) base += GAG_PLACE_PTS[p - 1];
+    }
+    const baseEach = base / cnt;
+
+    // Beat bonus: everyone below this tie group in the sorted list
+    // scored strictly lower (ties don't beat each other)
+    const beaten = present.length - k;
+
+    const lbl = cnt > 1 ? `${pos}-T` : `${pos}`;
+    for (let m = j; m < k; m++) {
+      place[present[m].i] = lbl;
+      pts[present[m].i] = s > 0
+        ? parseFloat((baseEach + GAG_BEAT_BONUS * beaten).toFixed(2))
+        : 0; // zero score: placed, but earns nothing
+    }
+    j = k;
+  }
+
+  return { pts, place };
+}
+
 /* Node.js export guard for command-line tests; browsers skip this. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { PLACE_PTS, getPlacePts, buildRows, rankRows };
+  module.exports = { PLACE_PTS, getPlacePts, buildRows, rankRows, GAG_PLACE_PTS, getPlacePtsGreenAsGrass };
 }

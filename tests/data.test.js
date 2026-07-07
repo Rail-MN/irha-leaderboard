@@ -40,6 +40,7 @@ const FIXTURE = [
   '"Denise Wilstead+","Gotcha","1","9","","1","9","","","","","","","","2","18","PRIME TIME ROOKIE"',
   '"Dee + A. Oakeson","Mak Daddy","16","0","","","","","","","","","","","1","0","ROOKIE LEVEL 1"',
   '"Sarai Laney Williamson","Shiner Voodoo Time","1","10","","1","10","","","","","","","","2","20","GREEN AS GRASS"',
+  '"Test Rider","Test Horse","","SC","","","NS","","","dq","","","71","","2","0","OPEN"',
 ].join('\n');
 
 const { shows, byClass } = transformSheetRows(parseCsv(FIXTURE));
@@ -69,6 +70,11 @@ assertEqual(shows.map(s => s.label), ['Apr', 'Jun', 'Jul', 'Sep'], 'shows discov
   const e = byClass['ROOKIE LEVEL 1'][0];
   assertEqual(e.rider, 'Dee + A. Oakeson', 'mid-name + left alone');
   assertEqual(e.senior, false, 'mid-name + is not the senior marker');
+}
+
+{ // SC/NS/DQ shorthand: SC = scratch (null), NS/DQ = participated with 0
+  const e = byClass['OPEN'].find(x => x.rider === 'Test Rider');
+  assertEqual(e.scores, [null, 0, 0, 71], 'SC → null; NS and DQ (any case) → 0; numbers unaffected');
 }
 
 // ---------------------------------------------------------------

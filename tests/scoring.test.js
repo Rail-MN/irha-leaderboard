@@ -10,7 +10,7 @@
    it fail, then fix the code until it passes.
    ============================================================ */
 
-const { getPlacePts, buildRows, rankRows } = require('../js/scoring.js');
+const { getPlacePts, buildRows, rankRows, getPlacePtsGreenAsGrass } = require('../js/scoring.js');
 
 let passed = 0, failed = 0;
 
@@ -115,6 +115,36 @@ console.log('\nQualification & low-score drop');
   const rows = buildRows(entries([70, 71, 72, 0]), 4);
   assertEqual(rows[0].dropIdx, 3, 'zero-point show is the drop for 4-show participant');
   assertEqual(rows[0].total, 30, 'total unaffected by the dropped zero');
+}
+
+// ---------------------------------------------------------------
+console.log('\nGreen as Grass (graduation class: 8..1 placing + 0.5/beat bonus)');
+
+{ // 10 distinct scores: 1st = 8 placing + 0.5*9 beaten = 12.5
+  const e = entries(...[76, 75, 74, 73, 72, 71, 70, 69, 68, 67].map(s => [s]));
+  const { pts, place } = getPlacePtsGreenAsGrass(e, 0);
+  assertEqual(pts[0], 12.5, '1st of 10 = 8 + 4.5 bonus = 12.5');
+  assertEqual(pts[7], 2, '8th = 1 placing + 0.5*2 = 2');
+  assertEqual(pts[8], 0.5, '9th = 0 placing + 0.5*1 = 0.5');
+  assertEqual(pts[9], 0, '10th (lowest, >0) = no placing, beat nobody = 0');
+  assertEqual(place[0], '1', 'places assigned normally');
+}
+
+{ // Two-way tie for 1st of 4: (8+7)/2 = 7.5 placing + 0.5*2 beaten = 8.5 each
+  const e = entries([72], [72], [70], [69]);
+  const { pts, place } = getPlacePtsGreenAsGrass(e, 0);
+  assertEqual(place[0], '1-T', 'tie labeled 1-T');
+  assertEqual(pts[0], 8.5, 'tied 1st: pooled placing + bonus, ties do not beat each other');
+  assertEqual(pts[1], 8.5, 'both tied riders equal');
+}
+
+{ // Zero score: gets last place, earns nothing; rider above gets bonus for beating them
+  const e = entries([70], [0], [null]);
+  const { pts, place } = getPlacePtsGreenAsGrass(e, 0);
+  assertEqual(place[1], '2', 'zero score is ranked (last place) in GaG');
+  assertEqual(pts[1], 0, 'zero score earns no points in GaG');
+  assertEqual(pts[0], 8.5, 'winner: 8 placing + 0.5 for beating the zero scorer');
+  assertEqual(place[2], null, 'scratch (null) still gets nothing');
 }
 
 // ---------------------------------------------------------------

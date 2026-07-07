@@ -60,3 +60,26 @@ IF(LEN(D4:D)=0,,LET(
   t, eSum+hSum+kSum+sSum,
   IF(hasPts=0, 0, IF(ABS(t)<0.000000001, 0, ROUND(t,10)))
 )
+
+
+
+**Calculates place for Green as Grass class**
+
+=IF(D4="","", RANK.EQ(D4, FILTER($D$4:$D, $D$4:$D<>""), 0))
+
+**Calculates points for Green as Grass class**
+
+=IF(D4="","",
+  LET(
+    s, D4,
+    scores, FILTER($D$4:$D, $D$4:$D<>""),
+    r, RANK.EQ(s, scores, 0),                     
+    t, COUNTIF(scores, s),                         
+    places, SEQUENCE(t,1,r,1),                     
+    base_sum, SUM( IF(places<=8, 9-places, 0) ),   
+    base_avg, base_sum / t,                        
+    beaten, COUNTIFS($D$4:$D, "<"&s, $D$4:$D, "<>"),
+    bonus, IF(s>0, 0.5*beaten, 0),                 
+    base_avg + bonus
+  )
+)

@@ -1,0 +1,52 @@
+Name hygiene report — generated 2026-07-07 18:35:20
+Names scanned: 363 distinct spellings (riders + horses)
+This report is informational only — nothing has been changed.
+
+===== RIDERS =====
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Dan V Myers"  — appears in: OPEN
+      "Dan V. Myers"  — appears in: OPEN, NOVICE HORSE OPEN L1
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Ethan A Willey"  — appears in: OPEN, INTERMEDIATE OPEN
+      "Ethan A. Willey"  — appears in: NOVICE HORSE OPEN L1
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Kriston N. Hill"  — appears in: ROOKIE LEVEL 1, LIMITED NON PRO, MARES NON PRO
+      "Kriston N Hill"  — appears in: NOVICE HORSE NON PRO L1
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Dee + A. Oakeson"  — appears in: ROOKIE LEVEL 1, PRIME TIME ROOKIE
+      "Dee A Oakeson"  — appears in: NOVICE HORSE NP L2
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Lisa + Oakeson"  — appears in: ROOKIE LEVEL 1
+      "Lisa Oakeson"  — appears in: PRIME TIME ROOKIE, NOVICE HORSE NON PRO L1
+
+  POSSIBLE MATCH (edit distance 1 — verify before changing anything):
+      "Peter Lodder"  — ROOKIE LEVEL 2, INTERMEDIATE NON PRO, STALLIONS GELDINGS NON PRO, MASTERS NON PRO
+      "Pete Lodder"  — NOVICE HORSE NP L2
+  POSSIBLE MATCH (edit distance 1 — verify before changing anything):
+      "Gabriela Harmsen"  — YOUTH 13 & UNDER, LIMITED NON PRO
+      "Gabriala Harmsen"  — NOVICE HORSE NP L2
+  POSSIBLE MATCH (edit distance 1 — verify before changing anything):
+      "Diance Stuart"  — NOVICE HORSE NP L3
+      "Diane Stuart"  — NOVICE HORSE OPEN L1
+
+===== HORSES =====
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Snap n Bend"  — appears in: LIMITED OPEN, NOVICE HORSE NON PRO L1
+      "Snap N Bend"  — appears in: ROOKIE LEVEL 2, LIMITED NON PRO, NOVICE HORSE OPEN L1
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "NVR Another Lucky Joe"  — appears in: YOUTH 14 TO 18, INTERMEDIATE NON PRO
+      "NVR Another Lucky joe"  — appears in: NOVICE HORSE NON PRO L1
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "Special Made Sangria"  — appears in: LIMITED NON PRO
+      "Special made Sangria"  — appears in: NOVICE HORSE NP L2
+  LIKELY DUPLICATE (differ only in punctuation/case/spacing):
+      "spooks helluva gun"  — appears in: MARES OPEN
+      "Spooks Helluva Gun"  — appears in: MARES NON PRO
+
+  POSSIBLE MATCH (edit distance 1 — verify before changing anything):
+      "Whizkeygotmespinnin"  — ROOKIE LEVEL 1, PRIME TIME ROOKIE, NOVICE HORSE OPEN L2
+      "Whiskeygotmespinnin"  — NOVICE HORSE NP L2
+  POSSIBLE MATCH (edit distance 2 — verify before changing anything):
+      "Wind Er Up Wimp"  — YOUTH 14 TO 18
+      "Winder Er Up Wimp"  — NOVICE HORSE NP L3
+

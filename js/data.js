@@ -29,6 +29,8 @@
                             the horn, off-pattern): counts as
                             participation, earns no points
    - null                 = did not participate in that show
+   Cell shorthand also accepted: "SC" (scratch) → null;
+   "NS" / "DQ" (no score / disqualified) → 0.
 
    Rider conventions:
    - A trailing "+" on a rider's name in the sheet means the rider
@@ -191,6 +193,12 @@ function transformSheetRows(rows) {
     const scores = showCols.map(c => {
       const v = (r[c.idx] || '').trim();
       if (v === '') return null;          // blank = didn't participate
+      // Status shorthand (rare, but must not be misread):
+      //   SC = scratch — never ran, same as blank
+      //   NS/DQ = no score / disqualified — DID participate, earns nothing
+      const u = v.toUpperCase();
+      if (u === 'SC') return null;
+      if (u === 'NS' || u === 'DQ') return 0;
       const n = parseFloat(v);
       return Number.isNaN(n) ? null : n;  // "0" parses to 0 = participated, zero score
     });
@@ -273,8 +281,9 @@ async function getSeasonData() {
       return {
         season: {
           title: SEASON_TITLE,
-          subtitle: `${shows.length} shows · Min 3 shows to qualify for year-end · ` +
-            `Low score dropped for ${shows.length}-show participants`,
+          subtitle: `Must participate in at least 3 out of ${shows.length} shows for a given class ` +
+            `to qualify for year-end awards. For ${shows.length}-show participants, ` +
+            `the lowest score of the season is dropped.`,
           shows,
           completedShows,
         },
