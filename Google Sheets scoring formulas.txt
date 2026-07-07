@@ -1,0 +1,62 @@
+**Calculates place in each show**
+
+=ARRAYFORMULA(
+IF(LEN(D4:D)=0,,LET(
+  nums, IFERROR(VALUE($D$4:$D),""),
+  pool, FILTER(nums, nums<>""),
+  MAP(D4:D,
+    LAMBDA(s,
+      LET(x, IFERROR(VALUE(s),""),
+        IF(OR(x="", x=0),, RANK(x, pool, 0))
+      )
+    )
+  )
+))
+)
+
+**Calculates points for each show**
+
+=ARRAYFORMULA(
+IF(LEN(D4:D)=0,,LET(
+  nums, IFERROR(VALUE($D$4:$D),""),
+  pool, FILTER(nums, nums<>""),
+  MAP(D4:D,
+    LAMBDA(s,
+      LET(x, IFERROR(VALUE(s),""),
+        IF(OR(x="", x=0),,
+          LET(
+            p, RANK(x, pool, 0),
+            k, COUNTIF(pool, x),
+            m, MAX(0, MIN(10 - p + 1, k)),
+            IF(m=0, 0, ROUND((m*(11 - p) - m*(m - 1)/2)/k, 10))
+          )
+        )
+      )
+    )
+  )
+))
+)
+
+**Calculates total shows participated for each class**
+
+=LET(
+  dflag, IF(LEN(TRIM(D4))>0, --IFERROR(ISNUMBER(VALUE(D4)), FALSE), 0),
+  gflag, IF(LEN(TRIM(G4))>0, --IFERROR(ISNUMBER(VALUE(G4)), FALSE), 0),
+  jflag, IF(LEN(TRIM(J4))>0, --IFERROR(ISNUMBER(VALUE(J4)), FALSE), 0),
+  mflag, IF(LEN(TRIM(M4))>0, --IFERROR(ISNUMBER(VALUE(M4)), FALSE), 0),
+  cnt, dflag+gflag+jflag+mflag,
+  IF(cnt=0, "", cnt)
+)
+
+**Calculates total points in each class**
+
+=LET(
+  ePts, E4, hPts, H4, kPts, K4, sPts, N4,
+  hasPts, --(ePts<>"") + --(hPts<>"") + --(kPts<>"") + --(sPts<>""),
+  eSum, IF(ePts<>"", ROUND(ePts,10), 0),
+  hSum, IF(hPts<>"", ROUND(hPts,10), 0),
+  kSum, IF(kPts<>"", ROUND(kPts,10), 0),
+  sSum, IF(sPts<>"", ROUND(sPts,10), 0),
+  t, eSum+hSum+kSum+sSum,
+  IF(hasPts=0, 0, IF(ABS(t)<0.000000001, 0, ROUND(t,10)))
+)

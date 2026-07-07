@@ -1,0 +1,343 @@
+<h2 class="sr-only">Western Reining standings — toggle between per-show detail and year-end summary</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary);padding:1rem 0;font-size:13px}
+h1{font-size:20px;font-weight:500;margin-bottom:3px}
+.subtitle{font-size:12px;color:var(--color-text-secondary);margin-bottom:1.25rem}
+.class-nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:.75rem}
+.level-nav{display:flex;gap:6px;margin-bottom:1.25rem;min-height:22px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:1.25rem}
+.nav-btn{font-size:12px;padding:4px 11px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:all .12s}
+.nav-btn:hover{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.nav-btn.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-primary);font-weight:500}
+.view-toggle{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.view-btn{font-size:12px;padding:5px 13px;border:none;background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:all .12s}
+.view-btn:hover{background:var(--color-background-secondary)}
+.view-btn.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+.view-btn+.view-btn{border-left:0.5px solid var(--color-border-secondary)}
+.table-wrap{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:auto}
+table{border-collapse:collapse;font-size:12px;white-space:nowrap;table-layout:fixed}
+th{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:right;padding:7px 10px;border-bottom:0.5px solid var(--color-border-tertiary);overflow:hidden;text-overflow:ellipsis}
+th.l{text-align:left}
+th.c{text-align:center}
+td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:middle;border-right:0.5px solid var(--color-border-tertiary);text-align:right;overflow:hidden;text-overflow:ellipsis}
+td:last-child{border-right:none}
+tr:last-child td{border-bottom:none}
+td.l{text-align:left}
+.rider{font-weight:500;font-size:13px}
+.horse{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;font-size:11px;font-weight:500}
+.r1{background:#FAC775;color:#412402}
+.r2{background:#D3D1C7;color:#2C2C2A}
+.r3{background:#F5C4B3;color:#4A1B0C}
+.rn{background:transparent;color:var(--color-text-secondary)}
+.dnq-pill{font-size:10px;padding:1px 6px;border-radius:99px;border:0.5px solid var(--color-border-tertiary);margin-left:4px;color:var(--color-text-tertiary)}
+.participation{font-size:12px;color:var(--color-text-secondary)}
+.empty{color:var(--color-text-tertiary)}
+.dropped{text-decoration:line-through;color:var(--color-text-tertiary)}
+.totals-sep{border-left:0.5px solid var(--color-border-secondary)!important}
+.show-grp-hdr{text-align:center!important;font-weight:500;font-size:11px;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-secondary)}
+.show-grp-blank{border-bottom:0.5px solid var(--color-border-tertiary)}
+</style>
+
+<h1>Western Reining — 2025 Season</h1>
+<p class="subtitle">4 shows · Min 3 shows to qualify for year-end · Low score dropped for 4-show participants</p>
+<div class="class-nav" id="classNav"></div>
+<div class="level-nav" id="levelNav"></div>
+<div class="top-bar">
+  <div style="font-size:12px;color:var(--color-text-secondary)" id="rowCount"></div>
+  <div class="view-toggle">
+    <button class="view-btn active" id="btnDetail" onclick="setView('detail')">Per-show detail</button>
+    <button class="view-btn" id="btnSummary" onclick="setView('summary')">Year-end standings</button>
+  </div>
+</div>
+<div class="table-wrap" id="tableWrap"></div>
+
+<script>
+const SHOWS=[
+  {label:'S. Jordan Apr',full:'South Jordan April'},
+  {label:'Salina Jun',  full:'Salina June'},
+  {label:'Salina Jul',  full:'Salina July'},
+  {label:'Heber Sep',   full:'Heber September'},
+];
+const PLACE_PTS=[10,9,8,7,6,5,4,3,2,1];
+
+const CLASSES={
+  'Open':{levels:['Level 1','Level 2','Level 3'],data:{
+    'Level 1':[
+      {rider:'Raye Stanton',  horse:'Mamas Gun',        scores:[72.0,73.5,71.5,70.5]},
+      {rider:'Jake Harmon',   horse:'Gunner Smoke',     scores:[71.5,72.0,null,70.0]},
+      {rider:'Callie Renner', horse:'Shiners Gold',     scores:[70.5,null,72.5,69.5]},
+      {rider:'Dusty Caldwell',horse:'Whizzing Star',    scores:[null,71.0,71.0,69.0]},
+      {rider:'Pam Cortez',    horse:'Electric Blue Jay',scores:[70.0,69.5,null,68.5]},
+      {rider:'Lena Pruitt',   horse:'Smart Chic Cat',   scores:[69.5,70.0,null,null]},
+      {rider:'Bo Whitmore',   horse:'Custom Freckles',  scores:[68.5,null,null,68.0]},
+      {rider:'Tom Delray',    horse:'Sliding Cassidy',  scores:[null,null,70.5,68.0]},
+    ],
+    'Level 2':[
+      {rider:'Jake Harmon',   horse:'Gunner Smoke',  scores:[73.5,75.0,null,74.0]},
+      {rider:'Raye Stanton',  horse:'Mamas Gun',     scores:[72.5,74.0,74.5,72.0]},
+      {rider:'Dusty Caldwell',horse:'Whizzing Star', scores:[null,71.5,72.5,71.0]},
+      {rider:'Callie Renner', horse:'Shiners Gold',  scores:[71.0,null,71.5,70.0]},
+      {rider:'Lena Pruitt',   horse:'Smart Chic Cat',scores:[70.0,71.0,null,null]},
+    ],
+    'Level 3':[
+      {rider:'Raye Stanton',  horse:'Mamas Gun',      scores:[74.0,75.5,76.0,73.5]},
+      {rider:'Jake Harmon',   horse:'Gunner Smoke',   scores:[75.0,null,75.5,73.0]},
+      {rider:'Tom Delray',    horse:'Sliding Cassidy',scores:[null,72.5,73.0,72.0]},
+      {rider:'Dusty Caldwell',horse:'Whizzing Star',  scores:[70.5,null,null,71.0]},
+    ]
+  }},
+  'Non Pro':{levels:['Level 1','Level 2','Level 3'],data:{
+    'Level 1':[
+      {rider:'Andi Marsh',   horse:'Smart Little Lena',scores:[71.0,70.5,72.0,71.5]},
+      {rider:'Mara Ellis',   horse:'Poco Hickory Star',scores:[71.5,null,72.5,70.5]},
+      {rider:'Dillon Hatch', horse:'Colonels Peppy',   scores:[70.0,71.0,null,70.0]},
+      {rider:'Faye Nguyen',  horse:'Docs Stylish Oak', scores:[null,69.5,70.5,69.5]},
+      {rider:'Sue Kimball',  horse:'Freckles Playboy', scores:[69.5,70.0,null,68.5]},
+      {rider:'Rhett Cassidy',horse:'Boon Too Smar',    scores:[null,68.5,69.5,null]},
+      {rider:'Colt Brewer',  horse:'Zan Parr Bar',     scores:[68.0,null,null,68.5]},
+      {rider:'Greg Fontaine',horse:'Topsail Whiz',     scores:[67.5,null,null,67.5]},
+    ],
+    'Level 2':[
+      {rider:'Andi Marsh',  horse:'Smart Little Lena',scores:[72.5,72.0,73.5,72.5]},
+      {rider:'Mara Ellis',  horse:'Poco Hickory Star',scores:[73.0,null,74.0,71.5]},
+      {rider:'Dillon Hatch',horse:'Colonels Peppy',   scores:[71.5,72.5,null,71.0]},
+      {rider:'Faye Nguyen', horse:'Docs Stylish Oak', scores:[null,70.5,71.5,70.0]},
+      {rider:'Colt Brewer', horse:'Zan Parr Bar',     scores:[69.5,null,null,70.5]},
+    ],
+    'Level 3':[
+      {rider:'Andi Marsh',  horse:'Smart Little Lena',scores:[73.5,73.0,75.0,74.0]},
+      {rider:'Mara Ellis',  horse:'Poco Hickory Star',scores:[72.5,null,73.5,72.0]},
+      {rider:'Dillon Hatch',horse:'Colonels Peppy',   scores:[null,71.0,72.0,71.5]},
+    ]
+  }},
+  'Novice Horse':{levels:['Level 1','Level 2'],data:{
+    'Level 1':[
+      {rider:'Wade Finch',   horse:'Custom Wrangler',  scores:[70.5,70.0,71.0,70.0]},
+      {rider:'Trace Holland',horse:'Wimpys Remedy',    scores:[70.0,null,71.5,69.5]},
+      {rider:'Lexi Burns',   horse:'Gunpowder Glory',  scores:[null,69.5,70.5,69.0]},
+      {rider:'Nate Sorrell', horse:'Spooks Gotta Gun', scores:[69.5,70.0,null,68.5]},
+      {rider:'Ida Kemp',     horse:'Badgers Lil Step', scores:[null,68.5,69.0,null]},
+      {rider:'Carrie Odom',  horse:'Magnum Chic Dream',scores:[68.0,null,null,69.0]},
+    ],
+    'Level 2':[
+      {rider:'Wade Finch',   horse:'Custom Wrangler', scores:[71.5,71.0,72.5,72.0]},
+      {rider:'Trace Holland',horse:'Wimpys Remedy',   scores:[72.0,null,73.0,71.5]},
+      {rider:'Nate Sorrell', horse:'Spooks Gotta Gun',scores:[70.5,71.5,null,70.0]},
+      {rider:'Lexi Burns',   horse:'Gunpowder Glory', scores:[null,70.0,71.0,70.5]},
+    ]
+  }},
+  'Novice Rider':{levels:['Level 1','Level 2'],data:{
+    'Level 1':[
+      {rider:'Paige Morton',horse:'Dunitall Chic',     scores:[70.0,69.5,71.0,70.5]},
+      {rider:'Emma Tran',   horse:'Slides Like Butter',scores:[70.5,null,71.5,70.0]},
+      {rider:'Josh Packard',horse:'Cee Cee Olena',     scores:[null,69.0,70.0,68.5]},
+      {rider:'Brooke Sims', horse:'Peptos Stylish',    scores:[68.5,69.5,null,68.0]},
+      {rider:'Aiden Rowe',  horse:'Taris Whiz',        scores:[67.5,null,null,68.5]},
+    ],
+    'Level 2':[
+      {rider:'Paige Morton',horse:'Dunitall Chic',     scores:[71.5,71.0,72.5,71.5]},
+      {rider:'Emma Tran',   horse:'Slides Like Butter',scores:[72.0,null,73.0,71.5]},
+      {rider:'Brooke Sims', horse:'Peptos Stylish',    scores:[null,69.5,70.5,70.0]},
+    ]
+  }},
+  'Youth':{levels:['Level 1'],data:{
+    'Level 1':[
+      {rider:'Mason Cole',  horse:'Dun It With Style',scores:[70.0,69.5,71.0,70.5]},
+      {rider:'Skylar Moss', horse:'Lil Whiz Kid',     scores:[70.5,null,71.5,70.0]},
+      {rider:'Carter Lind', horse:'Gunners Heaven',   scores:[null,68.5,70.0,68.5]},
+      {rider:'Avery James', horse:'Poco Magic Chic',  scores:[68.0,69.0,null,67.5]},
+      {rider:'Zoe Hartley', horse:'Spins N Slides',   scores:[67.0,null,null,68.0]},
+    ]
+  }}
+};
+
+function getPlacePts(entries,showIdx){
+  const present=entries.map((e,i)=>({i,s:e.scores[showIdx]})).filter(x=>x.s!==null);
+  present.sort((a,b)=>b.s-a.s);
+  const pts=new Array(entries.length).fill(null);
+  const place=new Array(entries.length).fill(null);
+  let j=0;
+  while(j<present.length){
+    const s=present[j].s;let k=j;
+    while(k<present.length&&present[k].s===s)k++;
+    const cnt=k-j,pos=j+1;
+    let tot=0;
+    for(let p=pos;p<pos+cnt;p++)if(p<=10)tot+=PLACE_PTS[p-1];
+    const each=parseFloat((tot/cnt).toFixed(2));
+    const lbl=cnt>1?`${pos}-T`:`${pos}`;
+    for(let m=j;m<k;m++){pts[present[m].i]=each;place[present[m].i]=lbl;}
+    j=k;
+  }
+  return{pts,place};
+}
+
+function buildRows(entries){
+  const showData=SHOWS.map((_,si)=>getPlacePts(entries,si));
+  return entries.map((e,ei)=>{
+    const showPts=SHOWS.map((_,si)=>showData[si].pts[ei]);
+    const showPlace=SHOWS.map((_,si)=>showData[si].place[ei]);
+    const participated=showPts.filter(p=>p!==null).length;
+    const qualified=participated>=3;
+    let dropIdx=-1,total=0;
+    if(qualified){
+      if(participated===4){
+        let minV=Infinity,minI=-1;
+        showPts.forEach((p,i)=>{if(p!==null&&p<minV){minV=p;minI=i;}});
+        dropIdx=minI;
+      }
+      showPts.forEach((p,i)=>{if(p!==null&&i!==dropIdx)total+=p;});
+      total=parseFloat(total.toFixed(2));
+    }
+    return{...e,showPts,showPlace,participated,qualified,dropIdx,total};
+  });
+}
+
+function rankRows(rows){
+  const q=rows.filter(r=>r.qualified).sort((a,b)=>b.total-a.total);
+  const u=rows.filter(r=>!r.qualified);
+  let rank=1;
+  for(let i=0;i<q.length;){
+    let j=i;
+    while(j<q.length&&q[j].total===q[i].total)j++;
+    for(let k=i;k<j;k++)q[k].rank=rank;
+    rank+=(j-i);i=j;
+  }
+  u.forEach(r=>r.rank=null);
+  return[...q,...u];
+}
+
+function fmtScore(s){return s===null?null:s.toFixed(1);}
+function fmtPts(p){if(p===null)return null;return p.toFixed(1);}
+
+function rankBadge(r){
+  if(r===1)return`<span class="rank-badge r1">1</span>`;
+  if(r===2)return`<span class="rank-badge r2">2</span>`;
+  if(r===3)return`<span class="rank-badge r3">3</span>`;
+  return`<span class="rank-badge rn">${r}</span>`;
+}
+
+const BG_EVEN='#f7f7f5';
+const BG_ODD='transparent';
+
+function renderDetail(rows){
+  // Column widths: rank, name, then 3 cols per show, then total, shows
+  // rank=30, name=150, place=44, score=52, pts=44 per show (x4), total=62, shows=46
+  const colW=[30,150,...Array(4).fill([44,52,44]).flat(),62,46];
+  const totalW=colW.reduce((a,b)=>a+b,0);
+
+  let html=`<table class="detail-tbl" style="width:${totalW}px"><colgroup>`;
+  colW.forEach(w=>html+=`<col style="width:${w}px">`);
+  html+=`</colgroup><thead>`;
+
+  // Row 1: show group headers
+  html+=`<tr style="background:var(--color-background-secondary)">`;
+  html+=`<th class="show-grp-blank" colspan="2" style="border-right:none"></th>`;
+  SHOWS.forEach((s,si)=>{
+    const sep=si<SHOWS.length-1?'border-right:0.5px solid var(--color-border-secondary)':'';
+    html+=`<th colspan="3" class="show-grp-hdr" title="${s.full}" style="${sep}">${s.label}</th>`;
+  });
+  html+=`<th colspan="2" class="show-grp-blank" style="border-left:0.5px solid var(--color-border-secondary);border-right:none"></th></tr>`;
+
+  // Row 2: column labels
+  html+=`<tr style="background:var(--color-background-secondary)">`;
+  html+=`<th class="l" style="border-right:0.5px solid var(--color-border-tertiary)"></th>`;
+  html+=`<th class="l" style="border-right:0.5px solid var(--color-border-tertiary)">Rider / Horse</th>`;
+  SHOWS.forEach((_,si)=>{
+    const lastShow=si===SHOWS.length-1;
+    const sepR=!lastShow?'border-right:0.5px solid var(--color-border-secondary)':'border-right:none';
+    html+=`<th>Place</th><th>Score</th><th style="${sepR}">Pts</th>`;
+  });
+  html+=`<th class="totals-sep">Total</th><th>Shows</th></tr></thead><tbody>`;
+
+  rows.forEach((r,idx)=>{
+    const bg=idx%2===0?BG_EVEN:BG_ODD;
+    const op=r.qualified?'1':'0.5';
+    html+=`<tr style="background:${bg};opacity:${op}" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter=''">`;
+    const rankCell=r.rank!==null?rankBadge(r.rank):`<span style="color:var(--color-text-tertiary)">—</span>`;
+    const dnq=r.qualified?'':'<span class="dnq-pill">DNQ</span>';
+    html+=`<td class="l">${rankCell}</td>`;
+    html+=`<td class="l"><div class="rider">${r.rider}${dnq}</div><div class="horse">${r.horse}</div></td>`;
+
+    SHOWS.forEach((_,si)=>{
+      const score=r.scores[si];
+      const pts=r.showPts[si];
+      const pl=r.showPlace[si];
+      const dropped=si===r.dropIdx;
+      const lastShow=si===SHOWS.length-1;
+      const grpSep=!lastShow?'border-right:0.5px solid var(--color-border-secondary)':'border-right:none';
+      if(score===null){
+        html+=`<td class="empty">—</td><td class="empty">—</td><td class="empty" style="${grpSep}">—</td>`;
+      } else if(dropped){
+        html+=`<td class="dropped">${pl}</td><td class="dropped">${fmtScore(score)}</td><td class="dropped" style="${grpSep}">${fmtPts(pts)}</td>`;
+      } else {
+        html+=`<td>${pl}</td><td>${fmtScore(score)}</td><td style="${grpSep}">${fmtPts(pts)}</td>`;
+      }
+    });
+
+    const tot=r.qualified?fmtPts(r.total):'—';
+    html+=`<td class="totals-sep" style="font-weight:500">${tot}</td>`;
+    html+=`<td class="participation">${r.participated}/4</td></tr>`;
+  });
+
+  html+=`</tbody></table>`;
+  return html;
+}
+
+function renderSummary(rows){
+  let html=`<table class="summary-tbl" style="width:100%"><colgroup>
+    <col style="width:40px"><col><col style="width:90px"><col style="width:70px">
+  </colgroup><thead><tr style="background:var(--color-background-secondary)">
+    <th class="l"></th>
+    <th class="l">Rider / Horse</th>
+    <th>Total pts</th>
+    <th>Shows</th>
+  </tr></thead><tbody>`;
+
+  rows.forEach((r,idx)=>{
+    const bg=idx%2===0?BG_EVEN:BG_ODD;
+    const op=r.qualified?'1':'0.5';
+    html+=`<tr style="background:${bg};opacity:${op}" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter=''">`;
+    const rankCell=r.rank!==null?rankBadge(r.rank):`<span style="color:var(--color-text-tertiary)">—</span>`;
+    const dnq=r.qualified?'':'<span class="dnq-pill">DNQ</span>';
+    const tot=r.qualified?fmtPts(r.total):'—';
+    html+=`<td class="l">${rankCell}</td>
+      <td class="l"><div class="rider">${r.rider}${dnq}</div><div class="horse">${r.horse}</div></td>
+      <td style="font-weight:500">${tot}</td>
+      <td class="participation">${r.participated}/4</td></tr>`;
+  });
+
+  html+=`</tbody></table>`;
+  return html;
+}
+
+let activeClass='Open',activeLevel='Level 1',activeView='detail';
+
+function renderClassNav(){
+  document.getElementById('classNav').innerHTML=Object.keys(CLASSES).map(c=>
+    `<button class="nav-btn${c===activeClass?' active':''}" onclick="setClass('${c}')">${c}</button>`
+  ).join('');
+}
+function renderLevelNav(){
+  const lvls=CLASSES[activeClass].levels;
+  document.getElementById('levelNav').innerHTML=lvls.length<2?'':lvls.map(l=>
+    `<button class="nav-btn${l===activeLevel?' active':''}" onclick="setLevel('${l}')">${l}</button>`
+  ).join('');
+}
+
+function render(){
+  const entries=CLASSES[activeClass].data[activeLevel];
+  const rows=rankRows(buildRows(entries));
+  document.getElementById('rowCount').textContent=`${rows.length} entries · ${rows.filter(r=>r.qualified).length} qualified`;
+  document.getElementById('tableWrap').innerHTML=activeView==='detail'?renderDetail(rows):renderSummary(rows);
+  document.getElementById('btnDetail').classList.toggle('active',activeView==='detail');
+  document.getElementById('btnSummary').classList.toggle('active',activeView==='summary');
+}
+
+function setClass(c){activeClass=c;activeLevel=CLASSES[c].levels[0];renderClassNav();renderLevelNav();render();}
+function setLevel(l){activeLevel=l;renderLevelNav();render();}
+function setView(v){activeView=v;render();}
+
+renderClassNav();renderLevelNav();render();
+</script>

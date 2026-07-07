@@ -1,0 +1,19 @@
+# ============================================================
+# .gitignore — files Git should NOT track
+# ============================================================
+# Nothing in the project needs ignoring today, but these are the
+# standard entries every web project starts with, so they're
+# ready before the tools that create them arrive.
+
+# Installed packages (if we ever run `npm install`, this folder
+# appears with thousands of files — never commit it; package.json
+# would record what to reinstall)
+node_modules/
+
+# Editor and OS clutter
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log

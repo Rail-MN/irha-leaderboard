@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport meta is what makes mobile browsers render at device width instead of a zoomed-out desktop view -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Western Reining Leaderboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Screen-reader-only heading: invisible visually, but tells assistive tech what this page is -->
+  <h2 class="sr-only">Western Reining standings — toggle between per-show detail and year-end summary</h2>
+
+  <!-- The page skeleton. Everything dynamic (title, nav buttons, table) is empty here
+       and gets filled in by JavaScript. HTML's only job is structure. -->
+  <h1 id="pageTitle"></h1>
+  <p class="subtitle" id="pageSubtitle"></p>
+
+  <!-- Only visible when the live data fetch fails; shows the actual error -->
+  <div class="data-banner" id="dataBanner" hidden></div>
+
+  <div class="class-nav" id="classNav"></div>
+  <div class="level-nav" id="levelNav"></div>
+
+  <div class="top-bar">
+    <div class="row-count" id="rowCount"></div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnDetail">Per-show detail</button>
+      <button class="view-btn" id="btnSummary">Year-end standings</button>
+    </div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap"></div>
+
+  <!-- Scripts load in dependency order: data first, then scoring, then rendering,
+       then main.js which wires everything together. Classic <script> tags (not ES modules)
+       so the page works when opened directly from disk — no local server required. -->
+  <script src="js/sample-data.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
