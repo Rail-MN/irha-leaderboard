@@ -67,11 +67,21 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; }
 
 /* ---------- Navigation (class + level button rows) ---------- */
 
-.class-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: .75rem; }
+/* Each nav row = a small label ("Class" / "Level") + its button row */
+.nav-row { display: flex; gap: 10px; margin-bottom: .75rem; }
+#levelRow { margin-bottom: 1.25rem; }
 
-/* min-height keeps the layout from jumping when a class has only one level
-   (the level nav renders empty in that case) */
-.level-nav { display: flex; gap: 6px; margin-bottom: 1.25rem; min-height: 22px; }
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  min-width: 42px;   /* both labels same width so button rows align */
+  padding-top: 6px;  /* optically centers the label on the first button row */
+}
+
+.class-nav, .level-nav { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .top-bar {
   display: flex;

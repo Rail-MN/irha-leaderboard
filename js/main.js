@@ -36,7 +36,9 @@ function renderLevelNav() {
   const nav = document.getElementById('levelNav');
   nav.innerHTML = '';
   const levels = seasonData.classes[activeClass].levels;
-  if (levels.length < 2) return; // hide level row for single-level classes
+  // Hide the entire row — label included — for single-level classes
+  document.getElementById('levelRow').style.display = levels.length < 2 ? 'none' : 'flex';
+  if (levels.length < 2) return;
   levels.forEach(l => {
     const btn = document.createElement('button');
     btn.className = 'nav-btn' + (l === activeLevel ? ' active' : '');
@@ -68,6 +70,23 @@ function render() {
 
   document.getElementById('btnDetail').classList.toggle('active', activeView === 'detail');
   document.getElementById('btnSummary').classList.toggle('active', activeView === 'summary');
+
+  reportHeight(); // content height changed — tell the embedding page
+}
+
+// ---- Embed support --------------------------------------------------------
+// When this page lives inside an <iframe> (e.g. on the Squarespace site),
+// the iframe can't grow to fit content on its own. So after every render
+// we send our height to the parent page with postMessage — a browser API
+// for safe cross-site messages — and a small script on the parent side
+// resizes the iframe to match. Standalone, this does nothing.
+
+function reportHeight() {
+  if (window.parent === window) return; // not embedded — nothing to tell
+  window.parent.postMessage({
+    type: 'irha-leaderboard-height',
+    height: document.documentElement.scrollHeight,
+  }, '*'); // '*' = any parent may receive; the parent checks OUR origin instead
 }
 
 // ---- State changers ------------------------------------------------------
@@ -116,6 +135,10 @@ async function init() {
 
   document.getElementById('btnDetail').addEventListener('click', () => setView('detail'));
   document.getElementById('btnSummary').addEventListener('click', () => setView('summary'));
+
+  // Width changes (phone rotation, window resize) can change how rows wrap,
+  // and therefore our height — keep the parent iframe in sync
+  window.addEventListener('resize', reportHeight);
 
   renderClassNav();
   renderLevelNav();

@@ -19,8 +19,17 @@
   <!-- Only visible when the live data fetch fails; shows the actual error -->
   <div class="data-banner" id="dataBanner" hidden></div>
 
-  <div class="class-nav" id="classNav"></div>
-  <div class="level-nav" id="levelNav"></div>
+  <!-- Nav rows: a small label ("Class" / "Level") in front of each button
+       row, so "Open / Open" stacked isn't ambiguous. The whole Level row
+       (label included) hides when a class has only one level. -->
+  <div class="nav-row">
+    <span class="nav-label">Class</span>
+    <div class="class-nav" id="classNav"></div>
+  </div>
+  <div class="nav-row" id="levelRow">
+    <span class="nav-label">Level</span>
+    <div class="level-nav" id="levelNav"></div>
+  </div>
 
   <div class="top-bar">
     <div class="row-count" id="rowCount"></div>
