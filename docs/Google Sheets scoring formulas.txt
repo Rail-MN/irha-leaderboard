@@ -83,3 +83,24 @@ IF(LEN(D4:D)=0,,LET(
     base_avg + bonus
   )
 )
+
+**Updated GaG place calculation formula, please verify**
+
+=ARRAYFORMULA(IF(D4:D="", "", RANK.EQ(D4:D, D4:D, 0)))
+
+**Updated GaG points formula, please verify**
+
+=MAP(D4:D, LAMBDA(s, 
+  IF(s="", "", 
+    LET(
+      r, RANK.EQ(s, D4:D, 0),
+      t, COUNTIF(D4:D, s),
+      places, SEQUENCE(t, 1, r, 1),
+      base_sum, SUMPRODUCT((places<=8) * (9-places)),
+      base_avg, base_sum / t,
+      beaten, COUNTIFS(D4:D, "<"&s, D4:D, "<>"),
+      bonus, IF(s>0, 0.5*beaten, 0),
+      base_avg + bonus
+    )
+  )
+))
