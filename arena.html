@@ -110,12 +110,18 @@ const POLL_SECONDS = 15;
     tokens display as-is (their own box), so nothing breaks while the
     code vocabulary is still being learned. */
 const LEVEL_LABELS = {
+  // Nov Hrs NP group (confirmed from June data)
   '1:NHN1': 'Level 1',
   '4:L1': 'Level 1',
   '2:NHn2': 'Level 2',
   '5:L2': 'Level 2',
   '3:L3': 'Level 3',
   '6:L3': 'Level 3',
+  // Green Reiner group: GR = IRHA Green as Grass; G1/G2 = national
+  // Green Reiner levels (shown at the arena, not tracked by the club)
+  '1:GR': 'Green as Grass',
+  '2:G1': 'Green Reiner 1',
+  '3:G2': 'Green Reiner 2',
 };
 const levelOf = t => LEVEL_LABELS[t] || t;
 
@@ -204,11 +210,13 @@ function render(entries) {
     cards.innerHTML += `<div class="${cls}">${inner}</div>`;
   });
 
-  // ---- Draw list: a window around the current run ----
+  // ---- Draw list: exactly 2 completed rows for context, then the
+  // current run and as many upcoming rows (and drags) as fit — the
+  // container clips the bottom, so the future gets the space ----
   const groupRows = entries.filter(e => e.group === activeGroup);
   const gCur = groupRows.findIndex(e => !isDone(e));
-  const start = Math.max(0, (gCur === -1 ? groupRows.length : gCur) - 3);
-  const win = groupRows.slice(start, start + 14);
+  const start = Math.max(0, (gCur === -1 ? groupRows.length : gCur) - 2);
+  const win = groupRows.slice(start, start + 24);
   document.getElementById('drawList').innerHTML = win.map(e => {
     if (isDrag(e)) return `<tr class="dragrow"><td class="d">—</td><td>ARENA DRAG</td><td class="s"></td></tr>`;
     const cls = e === groupRows[gCur] ? 'cur' : (isDone(e) ? 'done' : '');
@@ -224,16 +232,23 @@ function render(entries) {
     const l = levelOf(t);
     if (!lvls.includes(l)) lvls.push(l);
   }));
+  // Adaptive density: font size stays constant (readability from a
+  // distance beats completeness), so with many level boxes each box
+  // shows fewer riders — every level's LEADER always fits on screen.
+  const boxes = lvls.map(l => ({
+    l,
+    scored: groupRows
+      .filter(e => e.classes.some(t => levelOf(t) === l) && numScore(e) !== null && numScore(e) > 0)
+      .sort((a, b) => numScore(b) - numScore(a)),
+  })).filter(b => b.scored.length);
+  const rowsPer = boxes.length <= 4 ? 3 : (boxes.length <= 6 ? 2 : 1);
+
   const leaders = document.getElementById('leaders');
   leaders.innerHTML = '<h2>Leaders Today</h2>';
-  lvls.forEach(l => {
-    const scored = groupRows
-      .filter(e => e.classes.some(t => levelOf(t) === l) && numScore(e) !== null && numScore(e) > 0)
-      .sort((a, b) => numScore(b) - numScore(a))
-      .slice(0, 3);
-    if (!scored.length) return;
-    leaders.innerHTML += `<div class="lead-box"><div class="cls">${l}</div>` +
-      scored.map(e => `<div class="row"><span class="nm">${e.rider}</span><span class="sc">${e.score}</span></div>`).join('') +
+  boxes.forEach(b => {
+    leaders.innerHTML += `<div class="lead-box"><div class="cls">${b.l}</div>` +
+      b.scored.slice(0, rowsPer).map(e =>
+        `<div class="row"><span class="nm">${e.rider}</span><span class="sc">${e.score}</span></div>`).join('') +
       `</div>`;
   });
   if (leaders.children.length === 1) {

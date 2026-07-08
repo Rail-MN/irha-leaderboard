@@ -84,8 +84,11 @@ arrange the OBS scene ahead of time.
 **Morning — drop ALL the day's secretary CSVs into `incoming/`, then one command:**
 
 ```
-node tools/import-draws.js incoming/*.csv
+node tools/import-draws.js incoming
 ```
+
+(Passing the folder name imports every CSV in it — works identically in
+PowerShell, cmd, and Mac/Linux shells.)
 
 Files are ordered by the number prefix in their names ("4_Nov Hrs NP…"),
 which appears to be the class running order — spot-check the group order

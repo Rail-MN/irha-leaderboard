@@ -4,12 +4,15 @@
    Converts one Order-of-Go export from the show secretary into
    clean rows ready to paste into the Show Day sheet's Draws tab.
 
-   Run from the project folder — one file, several, or the whole
-   morning's drop folder at once:
+   Run from the project folder — a folder, one file, or several:
 
-     node tools/import-draws.js incoming/*.csv
+     node tools/import-draws.js incoming
      node tools/import-draws.js "one file.csv" --group "Novice Horse NP"
-     node tools/import-draws.js incoming/*.csv --roster season.csv
+     node tools/import-draws.js incoming --roster season.csv
+
+   Passing a FOLDER imports every .csv inside it. (Unix-style
+   incoming/*.csv also works — the script expands the * itself,
+   because Windows shells don't.)
 
    Multiple files are ordered by the number the secretary prefixes
    to each file name ("4_Nov Hrs NP…" → 4), which appears to be the
@@ -51,6 +54,9 @@ const KNOWN_ABBRS = {
   'L1': 'Level 1 (national)',
   'L2': 'Level 2 (national)',
   'L3': 'Level 3 (national)',
+  'GR': 'Green as Grass (IRHA — feeds the graduation tracker)',
+  'G1': 'Green Reiner L1 (national — not tracked by club)',
+  'G2': 'Green Reiner L2 (national — not tracked by club)',
 };
 
 const PUBLISHED_SEASON_CSV_URL =
@@ -106,6 +112,31 @@ async function getRoster(localPath) {
   }
 }
 
+/** Expand arguments into concrete CSV paths. A directory yields every
+    .csv inside it; a pattern containing * is matched within its folder.
+    We do this OURSELVES because Windows shells (PowerShell, cmd) pass
+    globs through literally — only Unix shells pre-expand them. */
+function expandCsvArgs(args) {
+  const files = [];
+  args.forEach(a => {
+    if (fs.existsSync(a) && fs.statSync(a).isDirectory()) {
+      fs.readdirSync(a)
+        .filter(f => f.toLowerCase().endsWith('.csv'))
+        .forEach(f => files.push(path.join(a, f)));
+    } else if (a.includes('*')) {
+      const dir = path.dirname(a);
+      const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp('^' + path.basename(a).split('*').map(esc).join('.*') + '$', 'i');
+      if (fs.existsSync(dir)) {
+        fs.readdirSync(dir).filter(f => re.test(f)).forEach(f => files.push(path.join(dir, f)));
+      }
+    } else {
+      files.push(a);
+    }
+  });
+  return files;
+}
+
 /** The secretary prefixes a number to each file ("4_Nov Hrs NP…") that
     appears to be the class running order — used to sort a whole
     morning's files. Files without a prefix sort by argument order. */
@@ -123,9 +154,11 @@ async function main() {
     const i = argv.indexOf(f);
     if (i !== -1) { flagIdxs.add(i); flagIdxs.add(i + 1); }
   });
-  const csvPaths = argv.filter((_, i) => !flagIdxs.has(i));
+  const csvPaths = expandCsvArgs(argv.filter((_, i) => !flagIdxs.has(i)));
   if (!csvPaths.length) {
-    console.log('Usage: node tools/import-draws.js <oog.csv> [more.csv …] [--group "Name"] [--roster season.csv]');
+    console.log('No CSV files found. Usage:');
+    console.log('  node tools/import-draws.js incoming            (whole drop folder)');
+    console.log('  node tools/import-draws.js "file.csv" [more…]  [--group "Name"] [--roster season.csv]');
     process.exit(1);
   }
   const groupOverride = flagVal('--group'); // only sensible for a single file
