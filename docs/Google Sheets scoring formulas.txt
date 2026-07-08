@@ -104,3 +104,20 @@ IF(LEN(D4:D)=0,,LET(
     )
   )
 ))
+
+*Correction to updated GaG points formula, per suggestion**
+
+=MAP(D4:D, LAMBDA(s,
+  IF(s="", "",
+    IF(s<=0, 0,
+      LET(
+        r, RANK.EQ(s, D4:D, 0),
+        t, COUNTIF(D4:D, s),
+        places, SEQUENCE(t, 1, r, 1),
+        base_sum, SUMPRODUCT((places<=8) * (9-places)),
+        beaten, COUNTIFS(D4:D, "<"&s, D4:D, "<>"),
+        base_sum/t + 0.5*beaten
+      )
+    )
+  )
+))
