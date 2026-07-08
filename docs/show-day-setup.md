@@ -81,8 +81,10 @@ in the output the first time. The `incoming/` folder is gitignored: a
 drop zone, not part of the project.
 
 - Review the summary: unknown class codes are flagged — confirm what they
-  mean, then add them to `KNOWN_ABBRS` (importer) and `CLASS_LABELS`
-  (arena.html) so they display nicely.
+  mean, then add them to `KNOWN_ABBRS` (importer) and `LEVEL_LABELS`
+  (arena.html). Codes for the same level (club + national) map to the
+  same label and share one leader box; classifiers like Prime Time or
+  Masters get their own label and their own box.
 - Fix any flagged rider-name mismatches IN THE TSV before pasting.
 - Open `tools/draws-import.tsv`, copy the rows (not the header), paste
   ONCE into the Draws tab — every group for the day, already in run order.
