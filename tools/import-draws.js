@@ -59,6 +59,28 @@ const KNOWN_ABBRS = {
   'G2': 'Green Reiner L2 (national — not tracked by club)',
 };
 
+/** Pretty names for run groups. Key = the RAW name derived from the
+    secretary's file name (shown in the import summary); value = what
+    you want displayed everywhere (sheet, arena display, overlay).
+    Write each once — every future import substitutes automatically.
+    Unmapped groups pass through unchanged, with a note in the summary.
+    THE VALUES BELOW ARE DRAFTS from the June dry-run batch — edit
+    freely; only the keys must match the raw names exactly. */
+const GROUP_LABELS = {
+  'Mens': 'Mens',
+  'Rookie & Primetime Rookie': 'Rookie: L1, L2 & Prime Time',
+  'Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP': 'Nov Horse NP: L1, L2, L3',
+  'Green Reiner': 'Green Reiner / Green as Grass',
+  'Ltd NonPro & Primetime NP & Master NP & Ltd NP & PT Non Pro': 'Non Pro: Limited, Prime Time, Masters',
+  'Youth 10&U & Short Stirrup': 'Youth 10 & Under / Short Stirrup',
+  'Youth 13&U & Youth 14-18': 'Youth: 13 & Under, 14\u201318',
+  'Open & Int Open & Ltd Open': 'Open: Open, Intermediate, Limited',
+  'Mares Open & Mares NP': 'Mares: Open, Non Pro',
+  'Non Pro & Int Non Pro & NonPro & NonPro Maturity': 'Non Pro: Open, Intermediate, Maturity',
+  'Nov Hrs Open & Nov Horse O L2': 'Nov Horse Open: L1, L2',
+  'Gr Hrs Open & Green Hrs NP': 'Green Horse: Open, Non Pro',
+};
+
 const PUBLISHED_SEASON_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSwJmc6cAJJqGb4JeR-NSG3H9RTjbrmP3meTDJZ43vcj1NDUTHfZYmw09OFS-SADZDRjFgyEpX0_cBj/pub?gid=648253065&single=true&output=csv';
 
@@ -174,8 +196,11 @@ async function main() {
   const summaries = [];
 
   for (const csvPath of csvPaths) {
+    const rawGroup = groupNameFromFile(csvPath);
     const group = (groupOverride && csvPaths.length === 1)
-      ? groupOverride : groupNameFromFile(csvPath);
+      ? groupOverride
+      : (GROUP_LABELS[rawGroup] || rawGroup);
+    const prettied = group !== rawGroup;
     const rows = parseCsv(fs.readFileSync(csvPath, 'utf8'));
     const header = rows[0];
 
@@ -236,13 +261,14 @@ async function main() {
       count++;
     });
 
-    summaries.push({ group, count, abbrSeen, file: path.basename(csvPath) });
+    summaries.push({ group, rawGroup, prettied, count, abbrSeen, file: path.basename(csvPath) });
   }
 
   fs.writeFileSync(OUT_PATH, out.map(r => r.join('\t')).join('\n') + '\n');
 
   summaries.forEach(sm => {
     console.log(`\n=== ${sm.group}  (${sm.count} entries — ${sm.file}) ===`);
+    if (!sm.prettied) console.log(`  (no pretty name configured — add '${sm.rawGroup}' to GROUP_LABELS if wanted)`);
     [...sm.abbrSeen.entries()].sort().forEach(([key, v]) => {
       const code = key.split(':')[1];
       const label = v.known ? KNOWN_ABBRS[code] : '*** UNKNOWN — confirm at the show, then add to KNOWN_ABBRS ***';

@@ -36,7 +36,12 @@ body {
 }
 
 /* Top bar: group name + status */
-.topbar { display: flex; justify-content: space-between; align-items: baseline; }
+.topbar { display: flex; justify-content: space-between; align-items: baseline; position: relative; }
+.show-title {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: 1.7vw; font-weight: 600; color: var(--gold); letter-spacing: .04em;
+  white-space: nowrap;
+}
 .group-name { font-size: 2.2vw; font-weight: 600; letter-spacing: .02em; }
 .status { font-size: 1.1vw; color: var(--text-dim); }
 .status.err { color: #e8a0a0; }
@@ -82,6 +87,7 @@ body {
 <body>
   <div class="topbar">
     <div class="group-name" id="groupName">IRHA Arena Display</div>
+    <div class="show-title" id="showTitle"></div>
     <div class="status" id="status">loading…</div>
   </div>
   <div class="main">
@@ -102,6 +108,9 @@ body {
    ================================================================== */
 const DATA_URL = 'https://script.google.com/macros/s/AKfycbw2QJ_NOzHqAWXpS6edKpYKG1KIYdQz3Xao8dqhmTDsANiTHUYELqhG9zewKR3svyqhsA/exec';
 const POLL_SECONDS = 15;
+
+/** Shown centered in the top bar — edit once per show. */
+const SHOW_TITLE = 'IRHA — One Hot Reining';
 
 /** Map positional class tokens ("column:code" from the importer) to the
     LEVEL shown on the display. Club and national versions of the same
@@ -273,6 +282,8 @@ function render(entries) {
    Fetch, render, repeat. On a failed fetch the display keeps showing the
    last good data and marks the status line — a flaky arena connection
    should never blank the screen. */
+document.getElementById('showTitle').textContent = SHOW_TITLE;
+
 let lastGood = null;
 async function tick() {
   const status = document.getElementById('status');

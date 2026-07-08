@@ -1,0 +1,21 @@
+Score transfer checklist — 2026-07-08
+Read down each section, type down the matching class tab.
+NEW ROW = this rider+horse combo is not in the season sheet yet.
+
+===== GREEN AS GRASS  (2 scores) =====
+  Hazel Williamson — Sonic Voodoo                     71   << NEW ROW
+  Kami Scott — Steady Eddie                           70   << NEW ROW
+
+===== NOVICE HORSE NON PRO L1  (2 scores) =====
+  Brand New Rider — Fresh Horse                       69   << NEW ROW
+  Juston Palmer — Fo Sho                            72.5
+
+===== NOVICE HORSE NP L2  (1 scores) =====
+  Sarai Laney Williamson — Shiner Voodoo Time         73
+
+===== NOVICE HORSE NP L3  (1 scores) =====
+  Sarai Laney Williamson — Shiner Voodoo Time         73   << NEW ROW
+
+===== NOT TRANSFERRED (no CLASS_MAP entry — intentional for non-club classes) =====
+  Green Reiner / Green as Grass :: 2:G1  (2 scores)
+

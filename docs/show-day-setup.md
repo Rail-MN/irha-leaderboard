@@ -136,3 +136,108 @@ of the entry sheet (this replaces the OCR step). Run
   group (scores of 0 and SC excluded)
 - **Connection lost?** The display keeps the last good data on screen and
   notes the problem in the corner — it never blanks mid-show.
+
+## Overlay tab (H2R feed)
+
+H2R reads fixed cells, so this tab keeps the "interesting" rows in ONE
+place: the moment you type a score in Draws, these cells recompute and
+the overlay follows — you never touch H2R mid-show.
+
+Setup once: add a tab named `Overlay` to the Show Day sheet. Row 1
+headers (for your own sanity): `Cur Draw | Cur Rider | Cur Horse |
+Next Draw | Next Rider | Next Horse | Prev Draw | Prev Rider | Prev
+Score | Class`. Paste the formulas below into row 2 (A2 through J2),
+then point H2R's column IDs at row 2 once.
+
+Behavior:
+- **Current** = the first Score-less row. During a drag: Cur Rider says
+  `Arena Drag`, Cur Draw and Cur Horse go blank.
+- **Next** = the next actual rider (skips drag rows), so it stays
+  populated during drags.
+- **Prev** = the last completed *ride* — skips `SC` scratches, and holds
+  steady during drags.
+
+**A2 — Cur Draw**
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ IF(INDEX(Draws!$C:$C,cur)="","",INDEX(Draws!$B:$B,cur))),"")
+```
+
+**B2 — Cur Rider**
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ IF(INDEX(Draws!$C:$C,cur)="","Arena Drag",INDEX(Draws!$C:$C,cur))),"")
+```
+
+**C2 — Cur Horse**
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ IF(INDEX(Draws!$C:$C,cur)="","",INDEX(Draws!$D:$D,cur))),"")
+```
+
+**D2 — Next Draw**
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ nxt, MIN(ARRAYFORMULA(IF((r>cur)*(f="")*(c<>""), r, 999999))),
+ INDEX(Draws!$B:$B,nxt)),"")
+```
+
+**E2 — Next Rider**  (same as D2 but ends `INDEX(Draws!$C:$C,nxt)`)
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ nxt, MIN(ARRAYFORMULA(IF((r>cur)*(f="")*(c<>""), r, 999999))),
+ INDEX(Draws!$C:$C,nxt)),"")
+```
+
+**F2 — Next Horse**  (ends `INDEX(Draws!$D:$D,nxt)`)
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ nxt, MIN(ARRAYFORMULA(IF((r>cur)*(f="")*(c<>""), r, 999999))),
+ INDEX(Draws!$D:$D,nxt)),"")
+```
+
+**G2 — Prev Draw**
+```
+=IFERROR(LET(f,Draws!$F$2:$F, r,ROW(Draws!$F$2:$F),
+ prv, MAX(ARRAYFORMULA(IF((f<>"")*(UPPER(f)<>"SC"), r, 0))),
+ INDEX(Draws!$B:$B,prv)),"")
+```
+
+**H2 — Prev Rider**  (ends `INDEX(Draws!$C:$C,prv)`)
+```
+=IFERROR(LET(f,Draws!$F$2:$F, r,ROW(Draws!$F$2:$F),
+ prv, MAX(ARRAYFORMULA(IF((f<>"")*(UPPER(f)<>"SC"), r, 0))),
+ INDEX(Draws!$C:$C,prv)),"")
+```
+
+**I2 — Prev Score**  (ends `INDEX(Draws!$F:$F,prv)`)
+```
+=IFERROR(LET(f,Draws!$F$2:$F, r,ROW(Draws!$F$2:$F),
+ prv, MAX(ARRAYFORMULA(IF((f<>"")*(UPPER(f)<>"SC"), r, 0))),
+ INDEX(Draws!$F:$F,prv)),"")
+```
+
+**J2 — Class** (the current row's Group text — automatically shows the
+pretty name once the importer's `GROUP_LABELS` fills the sheet with it;
+stays filled during drags since drag rows carry the group too)
+```
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+ last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
+ cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
+ INDEX(Draws!$A:$A,cur)),"")
+```
+
+If a formula shows an error, check the Draws tab is named exactly
+`Draws` and its columns are A=Group … G=Note as the importer emits them.
