@@ -159,7 +159,7 @@ Behavior:
 
 **A2 — Cur Draw**
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  IF(INDEX(Draws!$C:$C,cur)="","",INDEX(Draws!$B:$B,cur))),"")
@@ -167,7 +167,7 @@ Behavior:
 
 **B2 — Cur Rider**
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  IF(INDEX(Draws!$C:$C,cur)="","Arena Drag",INDEX(Draws!$C:$C,cur))),"")
@@ -175,7 +175,7 @@ Behavior:
 
 **C2 — Cur Horse**
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  IF(INDEX(Draws!$C:$C,cur)="","",INDEX(Draws!$D:$D,cur))),"")
@@ -183,7 +183,7 @@ Behavior:
 
 **D2 — Next Draw**
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  nxt, MIN(ARRAYFORMULA(IF((r>cur)*(f="")*(c<>""), r, 999999))),
@@ -192,7 +192,7 @@ Behavior:
 
 **E2 — Next Rider**  (same as D2 but ends `INDEX(Draws!$C:$C,nxt)`)
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  nxt, MIN(ARRAYFORMULA(IF((r>cur)*(f="")*(c<>""), r, 999999))),
@@ -201,7 +201,7 @@ Behavior:
 
 **F2 — Next Horse**  (ends `INDEX(Draws!$D:$D,nxt)`)
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  nxt, MIN(ARRAYFORMULA(IF((r>cur)*(f="")*(c<>""), r, 999999))),
@@ -210,21 +210,21 @@ Behavior:
 
 **G2 — Prev Draw**
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  prv, MAX(ARRAYFORMULA(IF((f<>"")*(UPPER(f)<>"SC"), r, 0))),
  INDEX(Draws!$B:$B,prv)),"")
 ```
 
 **H2 — Prev Rider**  (ends `INDEX(Draws!$C:$C,prv)`)
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  prv, MAX(ARRAYFORMULA(IF((f<>"")*(UPPER(f)<>"SC"), r, 0))),
  INDEX(Draws!$C:$C,prv)),"")
 ```
 
 **I2 — Prev Score**  (ends `INDEX(Draws!$F:$F,prv)`)
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  prv, MAX(ARRAYFORMULA(IF((f<>"")*(UPPER(f)<>"SC"), r, 0))),
  INDEX(Draws!$F:$F,prv)),"")
 ```
@@ -233,7 +233,7 @@ Behavior:
 pretty name once the importer's `GROUP_LABELS` fills the sheet with it;
 stays filled during drags since drag rows carry the group too)
 ```
-=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ROW(Draws!$F$2:$F),
+=IFERROR(LET(f,Draws!$F$2:$F, c,Draws!$C$2:$C, g,Draws!$G$2:$G, r,ARRAYFORMULA(ROW(Draws!$F$2:$F)),
  last, MAX(ARRAYFORMULA(IF(f<>"", r, 0))),
  cur, MIN(ARRAYFORMULA(IF((f="")*((c<>"")+((c="")*ISNUMBER(SEARCH("drag",g))*(r>last))), r, 999999))),
  INDEX(Draws!$A:$A,cur)),"")
