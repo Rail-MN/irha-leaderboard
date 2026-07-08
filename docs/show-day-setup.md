@@ -48,6 +48,18 @@ Copy the URL ending in `/exec`.
 > draw list* — the same information posted on paper at the show. Writing
 > still requires edit access to the sheet.
 
+**Narrowing the permission (recommended):** Google's authorization prompt
+claims access to ALL your spreadsheets — that's the default scope, not
+what the code does. To make the grant match the code: Project Settings →
+enable "Show 'appsscript.json' manifest file" → add to the manifest:
+
+```json
+"oauthScopes": ["https://www.googleapis.com/auth/spreadsheets.currentonly"]
+```
+
+Re-authorize when prompted. The script is now restricted to the Show Day
+sheet only — the consent screen will say so.
+
 ### 3. Point arena.html at it
 
 In `arena.html`, set:
