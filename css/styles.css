@@ -288,6 +288,12 @@ td.l { text-align: left; }
   margin-left: 6px;
   font-weight: 600;
 }
+/* Crossed 50 this season — the buckle to-do list */
+.grad-pill.new {
+  background: #412402;
+  color: #FAC775;
+  border: 1px solid #FAC775;
+}
 
 /* Archive of riders not seen recently — native collapsible element */
 details.gag-archive { padding: 4px 12px 12px; }

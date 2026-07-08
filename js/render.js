@@ -204,7 +204,9 @@ function gagTable(rows) {
   rows.forEach((r, idx) => {
     const bg = idx % 2 === 0 ? BG_EVEN : BG_ODD;
     const pct = Math.min(100, (r.total / 50) * 100).toFixed(1);
-    const grad = r.graduated ? `<span class="grad-pill" title="50+ lifetime points — belt buckle earned!">GRADUATED</span>` : '';
+    const grad = r.newGrad
+      ? `<span class="grad-pill new" title="Crossed 50 this season — buckle due!">NEW GRADUATE</span>`
+      : (r.graduated ? `<span class="grad-pill" title="50+ lifetime points">GRADUATED</span>` : '');
     html += `<tr style="background:${bg}"` +
       ` onmouseover="this.style.filter='brightness(1.25)'"` +
       ` onmouseout="this.style.filter=''">`;

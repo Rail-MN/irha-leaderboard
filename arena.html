@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRHA Arena Display</title>
+<style>
+/* ============================================================
+   Arena display — designed for a 1920x1080 TV / OBS browser
+   source. Self-contained on purpose: one file, no dependencies,
+   so OBS and the arena TV need exactly one URL.
+   Fonts scale with the viewport (vw units) so it stays readable
+   from the warm-up pen.
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #262525;
+  --panel: #363434;
+  --panel-2: #424040;
+  --text: #f4f2ef;
+  --text-dim: #b9b5af;
+  --accent: #8e7462;
+  --gold: #FAC775;
+  --now: #5d8a58;   /* current rider = green */
+}
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2vw;
+  gap: 1vw;
+}
+
+/* Top bar: group name + status */
+.topbar { display: flex; justify-content: space-between; align-items: baseline; }
+.group-name { font-size: 2.2vw; font-weight: 600; letter-spacing: .02em; }
+.status { font-size: 1.1vw; color: var(--text-dim); }
+.status.err { color: #e8a0a0; }
+
+.main { display: flex; gap: 1vw; flex: 1; min-height: 0; }
+
+/* Left column: NOW / NEXT / ON DECK cards */
+.updown { display: flex; flex-direction: column; gap: 1vw; flex: 1.1; min-width: 0; }
+.card { background: var(--panel); border-radius: .8vw; padding: 1.2vw 1.5vw; }
+.card .label { font-size: 1.1vw; color: var(--text-dim); text-transform: uppercase; letter-spacing: .12em; margin-bottom: .4vw; }
+.card.now { background: linear-gradient(135deg, #46543f, #3a4a36); outline: .18vw solid var(--now); flex: 1.4; }
+.card.now .rider { font-size: 3.6vw; font-weight: 700; line-height: 1.1; }
+.card.now .horse { font-size: 2vw; color: var(--text-dim); margin-top: .3vw; }
+.card.now .meta { font-size: 1.3vw; color: var(--text-dim); margin-top: .8vw; }
+.card.drag { background: linear-gradient(135deg, #54503f, #4a4636); outline: .18vw solid var(--gold); }
+.card.drag .rider { font-size: 3vw; font-weight: 700; color: var(--gold); }
+.card.small { flex: 1; }
+.card.small .rider { font-size: 2vw; font-weight: 600; }
+.card.small .horse { font-size: 1.3vw; color: var(--text-dim); }
+.draw-num { display: inline-block; background: var(--accent); color: #fff; border-radius: .5vw; padding: .1vw .7vw; font-size: 1.4vw; font-weight: 700; margin-right: .8vw; vertical-align: middle; }
+
+/* Middle column: draw list window */
+.list { flex: 1.2; background: var(--panel); border-radius: .8vw; padding: 1vw 1.2vw; overflow: hidden; min-width: 0; }
+.list h2, .leaders h2 { font-size: 1.2vw; color: var(--text-dim); text-transform: uppercase; letter-spacing: .12em; margin-bottom: .6vw; }
+.list table { width: 100%; border-collapse: collapse; font-size: 1.35vw; }
+.list td { padding: .38vw .5vw; border-bottom: 1px solid #4a4846; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list tr.done { color: var(--text-dim); }
+.list tr.cur { background: rgba(93, 138, 88, .35); font-weight: 700; }
+.list tr.dragrow { color: var(--gold); font-style: italic; }
+.list td.d { width: 3.2vw; text-align: right; color: var(--text-dim); }
+.list td.s { width: 5vw; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Right column: today's class leaders */
+.leaders { flex: 1; background: var(--panel); border-radius: .8vw; padding: 1vw 1.2vw; overflow: hidden; display: flex; flex-direction: column; gap: .8vw; min-width: 0; }
+.lead-box { background: var(--panel-2); border-radius: .6vw; padding: .7vw .9vw; }
+.lead-box .cls { font-size: 1.1vw; color: var(--gold); font-weight: 600; margin-bottom: .3vw; }
+.lead-box .row { display: flex; justify-content: space-between; font-size: 1.25vw; padding: .12vw 0; }
+.lead-box .row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 1vw; }
+.lead-box .row .sc { font-variant-numeric: tabular-nums; font-weight: 600; }
+.empty-note { color: var(--text-dim); font-size: 1.2vw; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="group-name" id="groupName">IRHA Arena Display</div>
+    <div class="status" id="status">loading…</div>
+  </div>
+  <div class="main">
+    <div class="updown" id="cards"></div>
+    <div class="list">
+      <h2>Draw Order</h2>
+      <table><tbody id="drawList"></tbody></table>
+    </div>
+    <div class="leaders" id="leaders"><h2>Leaders Today</h2></div>
+  </div>
+
+<script>
+/* ================= CONFIGURATION ==================================
+   DATA_URL: where the Draws tab lives.
+   - Best: the Apps Script web app URL (…/exec) — updates in seconds.
+   - Works: a published-to-web CSV URL — updates in minutes (cached).
+   - Empty: DEMO MODE with sample data, for testing OBS/TV layout.
+   ================================================================== */
+const DATA_URL = '';
+const POLL_SECONDS = 15;
+
+/** Pretty names for the positional class codes ("column:code" from the
+    importer). Unmapped tokens display as-is, so nothing breaks while
+    the code vocabulary is still being learned. */
+const CLASS_LABELS = {
+  '1:NHN1': 'Nov Horse NP L1 (club)',
+  '2:NHn2': 'Nov Horse NP L2 (club)',
+  '3:L3': 'Nov Horse NP L3',
+  '4:L1': 'Nov Horse NP L1',
+  '5:L2': 'Nov Horse NP L2',
+  '6:L3': 'Nov Horse NP L3 (nat)',
+};
+
+/* Demo data so the layout can be tested with no sheet connected */
+const DEMO = [
+  ['Group','Draw','Rider','Horse','Classes','Score','Note'],
+  ['Novice Horse Non Pro','1','Sarai Laney Williamson','Shiner Voodoo Time','2:NHn2 3:L3','72',''],
+  ['Novice Horse Non Pro','2','Gabriela Harmsen','Ruf Rider','2:NHn2','68.5',''],
+  ['Novice Horse Non Pro','3','Juston Palmer','Fo Sho','1:NHN1','SC',''],
+  ['Novice Horse Non Pro','4','Hailey N Bird','TR Naughty Dottie','1:NHN1 2:NHn2','70.5',''],
+  ['Novice Horse Non Pro','5','Kendra Manwaring','All Dun Gamblin','1:NHN1','',''],
+  ['Novice Horse Non Pro','6','Edwardo Valdez','Dunitmobsterstyle','1:NHN1','',''],
+  ['Novice Horse Non Pro','7','Charlee Ann Mabey','Douvoodoolikeido','3:L3','',''],
+  ['Novice Horse Non Pro','','','','','','DRAG'],
+  ['Novice Horse Non Pro','8','Douglas Graham','Try N Catch The Mob','3:L3','',''],
+  ['Novice Horse Non Pro','9','Quincy Manwaring','Xtra Wimped Nay Nay','1:NHN1','',''],
+  ['Novice Horse Non Pro','10','Stefaan Bultinck','LC Luna Star','1:NHN1','',''],
+];
+
+/* ---- Minimal CSV parser (same logic as the dashboard's) -------------- */
+function parseCsv(text) {
+  const rows = []; let row = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* ---- Data model -------------------------------------------------------
+   A row is DONE when its Score cell has anything in it (a number, or
+   SC for a scratch). The CURRENT run is the first not-done row; if
+   that row is a drag-break marker, the arena is being dragged. */
+function toEntries(grid) {
+  const header = grid[0].map(h => h.trim());
+  const idx = n => header.indexOf(n);
+  const gi = idx('Group'), di = idx('Draw'), ri = idx('Rider'),
+        hi = idx('Horse'), ci = idx('Classes'), si = idx('Score'), ni = idx('Note');
+  return grid.slice(1)
+    .map(r => ({
+      group: (r[gi] || '').trim(),
+      draw: (r[di] || '').trim(),
+      rider: (r[ri] || '').trim(),
+      horse: (r[hi] || '').trim(),
+      classes: (r[ci] || '').trim().split(/\s+/).filter(Boolean),
+      score: (r[si] || '').trim(),
+      note: (r[ni] || '').trim(),
+    }))
+    .filter(e => e.rider || /drag/i.test(e.note)); // keep entries + drag markers
+}
+
+const isDrag = e => /drag/i.test(e.note) && !e.rider;
+const isDone = e => e.score !== '';
+const numScore = e => { const n = parseFloat(e.score); return Number.isNaN(n) ? null : n; };
+
+function render(entries) {
+  const curIdx = entries.findIndex(e => !isDone(e) && (!isDrag(e) || true));
+  // findIndex above: first row that is not done (drag rows are never "done",
+  // so a pending drag naturally becomes the current item)
+  const cur = curIdx === -1 ? null : entries[curIdx];
+  const activeGroup = cur ? cur.group : (entries.length ? entries[entries.length - 1].group : '');
+  document.getElementById('groupName').textContent = activeGroup || 'IRHA Arena Display';
+
+  // ---- NOW / NEXT / ON DECK cards ----
+  const upcoming = curIdx === -1 ? [] : entries.slice(curIdx).filter(e => !isDone(e)).slice(0, 3);
+  const cards = document.getElementById('cards');
+  cards.innerHTML = '';
+  const labels = ['Now in Arena', 'Next', 'On Deck'];
+  if (!upcoming.length) {
+    cards.innerHTML = `<div class="card now"><div class="label">Group Complete</div>` +
+      `<div class="rider">All runs scored</div></div>`;
+  }
+  upcoming.forEach((e, i) => {
+    const cls = i === 0 ? (isDrag(e) ? 'card drag' : 'card now') : 'card small';
+    const inner = isDrag(e)
+      ? `<div class="label">${labels[i]}</div><div class="rider">ARENA DRAG</div>`
+      : `<div class="label">${labels[i]}</div>` +
+        `<div class="rider"><span class="draw-num">${e.draw}</span>${e.rider}</div>` +
+        `<div class="horse">${e.horse}</div>` +
+        (i === 0 ? `<div class="meta">${e.classes.map(t => CLASS_LABELS[t] || t).join(' · ')}</div>` : '');
+    cards.innerHTML += `<div class="${cls}">${inner}</div>`;
+  });
+
+  // ---- Draw list: a window around the current run ----
+  const groupRows = entries.filter(e => e.group === activeGroup);
+  const gCur = groupRows.findIndex(e => !isDone(e));
+  const start = Math.max(0, (gCur === -1 ? groupRows.length : gCur) - 3);
+  const win = groupRows.slice(start, start + 14);
+  document.getElementById('drawList').innerHTML = win.map(e => {
+    if (isDrag(e)) return `<tr class="dragrow"><td class="d">—</td><td>ARENA DRAG</td><td class="s"></td></tr>`;
+    const cls = e === groupRows[gCur] ? 'cur' : (isDone(e) ? 'done' : '');
+    const sc = e.score === 'SC' ? 'SCR' : e.score;
+    return `<tr class="${cls}"><td class="d">${e.draw}</td><td>${e.rider} · ${e.horse}</td><td class="s">${sc}</td></tr>`;
+  }).join('');
+
+  // ---- Leaders today: top 3 per class token in the active group ----
+  const tokens = [...new Set(groupRows.flatMap(e => e.classes))];
+  const leaders = document.getElementById('leaders');
+  leaders.innerHTML = '<h2>Leaders Today</h2>';
+  tokens.forEach(t => {
+    const scored = groupRows
+      .filter(e => e.classes.includes(t) && numScore(e) !== null && numScore(e) > 0)
+      .sort((a, b) => numScore(b) - numScore(a))
+      .slice(0, 3);
+    if (!scored.length) return;
+    leaders.innerHTML += `<div class="lead-box"><div class="cls">${CLASS_LABELS[t] || t}</div>` +
+      scored.map(e => `<div class="row"><span class="nm">${e.rider}</span><span class="sc">${e.score}</span></div>`).join('') +
+      `</div>`;
+  });
+  if (leaders.children.length === 1) {
+    leaders.innerHTML += `<div class="empty-note">Leaders appear as scores are entered.</div>`;
+  }
+}
+
+/* ---- Polling loop ------------------------------------------------------
+   Fetch, render, repeat. On a failed fetch the display keeps showing the
+   last good data and marks the status line — a flaky arena connection
+   should never blank the screen. */
+let lastGood = null;
+async function tick() {
+  const status = document.getElementById('status');
+  try {
+    let grid;
+    if (!DATA_URL) {
+      grid = DEMO;
+      status.textContent = 'DEMO DATA — set DATA_URL in arena.html';
+    } else {
+      const resp = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const text = await resp.text();
+      // Apps Script returns JSON (starts with "["); published sheets return CSV
+      grid = text.trimStart().startsWith('[') ? JSON.parse(text) : parseCsv(text);
+      status.textContent = 'updated ' + new Date().toLocaleTimeString();
+      status.classList.remove('err');
+    }
+    lastGood = grid;
+    render(toEntries(grid));
+  } catch (err) {
+    status.textContent = 'connection lost — showing last data (' + err.message + ')';
+    status.classList.add('err');
+    if (lastGood) render(toEntries(lastGood));
+  }
+  setTimeout(tick, POLL_SECONDS * 1000);
+}
+tick();
+</script>
+</body>
+</html>

@@ -282,7 +282,13 @@ function buildGagProgress(entries, carryover, numShows) {
       // Active = competed this season, or tracker says seen recently
       active: r.seasonShows > 0 || (r.lastShown !== null && r.lastShown !== 'UNK'),
     };
-  }).sort((a, b) => b.total - a.total);
+  }).sort((a, b) => {
+    // NEW graduates pin to the top — they're the "needs a buckle" list.
+    // (Once the buckle is delivered, folding their season points into
+    // Previous Points in the tracker clears the flag — data, not code.)
+    if (a.newGrad !== b.newGrad) return a.newGrad ? -1 : 1;
+    return b.total - a.total;
+  });
 }
 
 /* Node.js export guard for command-line tests; browsers skip this. */

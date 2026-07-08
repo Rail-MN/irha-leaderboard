@@ -169,7 +169,7 @@ console.log('\nGaG graduation progress (rider-level, carryover + season)');
   assertEqual(anna.total, 56.5, 'lifetime total = carryover + season');
   assertEqual(anna.graduated, true, 'graduates at 50+');
   assertEqual(anna.newGrad, true, 'crossed 50 THIS season');
-  assertEqual(rows[0].rider, 'Anna Fields', 'sorted by lifetime total');
+  assertEqual(rows[0].rider, 'Anna Fields', 'new graduate pinned to top');
 
   const ben = rows.find(r => r.rider === 'Ben Cole');
   assertEqual(ben.total, 6, 'no carryover row → season only');
@@ -178,6 +178,18 @@ console.log('\nGaG graduation progress (rider-level, carryover + season)');
   const cara = rows.find(r => r.rider === 'Cara Dunn');
   assertEqual(cara.active, false, 'UNK + no season scores → archive');
   assertEqual(cara.graduated, false, '12 points, not graduated');
+}
+
+{ // New grads outrank even higher lifetime totals (buckle to-do list on top)
+  const entries = [{ rider: 'Riser', horse: 'H', scores: [null, null, 70, null] }];
+  const carryover = [
+    { rider: 'Riser',    prev: 45, lastShown: '2026' },  // 45 + 8 = 53: NEW grad
+    { rider: 'Old Grad', prev: 80, lastShown: '2026' },  // long since graduated
+  ];
+  const rows = buildGagProgress(entries, carryover, 4);
+  assertEqual(rows[0].rider, 'Riser', 'new grad pins above older, higher-total grad');
+  assertEqual(rows[1].rider, 'Old Grad', 'established grad follows, still sorted by total');
+  assertEqual(rows[1].newGrad, false, 'prev >= 50 means not new — folding points into carryover clears the pin');
 }
 
 { // Name drift between tracker and entry sheet must not split a rider
