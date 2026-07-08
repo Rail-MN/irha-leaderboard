@@ -103,22 +103,26 @@ body {
 const DATA_URL = '';
 const POLL_SECONDS = 15;
 
-/** Pretty names for the positional class codes ("column:code" from the
-    importer). Unmapped tokens display as-is, so nothing breaks while
-    the code vocabulary is still being learned. */
-const CLASS_LABELS = {
-  '1:NHN1': 'Nov Horse NP L1 (club)',
-  '2:NHn2': 'Nov Horse NP L2 (club)',
-  '3:L3': 'Nov Horse NP L3',
-  '4:L1': 'Nov Horse NP L1',
-  '5:L2': 'Nov Horse NP L2',
-  '6:L3': 'Nov Horse NP L3 (nat)',
+/** Map positional class tokens ("column:code" from the importer) to the
+    LEVEL shown on the display. Club and national versions of the same
+    level map to the SAME label and merge into one leader box — what
+    matters arena-side is who leads L1, L2, Prime Time, etc. Unmapped
+    tokens display as-is (their own box), so nothing breaks while the
+    code vocabulary is still being learned. */
+const LEVEL_LABELS = {
+  '1:NHN1': 'Level 1',
+  '4:L1': 'Level 1',
+  '2:NHn2': 'Level 2',
+  '5:L2': 'Level 2',
+  '3:L3': 'Level 3',
+  '6:L3': 'Level 3',
 };
+const levelOf = t => LEVEL_LABELS[t] || t;
 
 /* Demo data so the layout can be tested with no sheet connected */
 const DEMO = [
   ['Group','Draw','Rider','Horse','Classes','Score','Note'],
-  ['Novice Horse Non Pro','1','Sarai Laney Williamson','Shiner Voodoo Time','2:NHn2 3:L3','72',''],
+  ['Novice Horse Non Pro','1','Sarai Laney Williamson','Shiner Voodoo Time','2:NHn2 5:L2 3:L3','72',''],
   ['Novice Horse Non Pro','2','Gabriela Harmsen','Ruf Rider','2:NHn2','68.5',''],
   ['Novice Horse Non Pro','3','Juston Palmer','Fo Sho','1:NHN1','SC',''],
   ['Novice Horse Non Pro','4','Hailey N Bird','TR Naughty Dottie','1:NHN1 2:NHn2','70.5',''],
@@ -196,7 +200,7 @@ function render(entries) {
       : `<div class="label">${labels[i]}</div>` +
         `<div class="rider"><span class="draw-num">${e.draw}</span>${e.rider}</div>` +
         `<div class="horse">${e.horse}</div>` +
-        (i === 0 ? `<div class="meta">${e.classes.map(t => CLASS_LABELS[t] || t).join(' · ')}</div>` : '');
+        (i === 0 ? `<div class="meta">${[...new Set(e.classes.map(levelOf))].join(' · ')}</div>` : '');
     cards.innerHTML += `<div class="${cls}">${inner}</div>`;
   });
 
@@ -212,17 +216,23 @@ function render(entries) {
     return `<tr class="${cls}"><td class="d">${e.draw}</td><td>${e.rider} · ${e.horse}</td><td class="s">${sc}</td></tr>`;
   }).join('');
 
-  // ---- Leaders today: top 3 per class token in the active group ----
-  const tokens = [...new Set(groupRows.flatMap(e => e.classes))];
+  // ---- Leaders today: top 3 per LEVEL in the active group ----
+  // Tokens are folded into level buckets first (club + national merge);
+  // a run tagged with two tokens of the same level counts once.
+  const lvls = [];
+  groupRows.forEach(e => e.classes.forEach(t => {
+    const l = levelOf(t);
+    if (!lvls.includes(l)) lvls.push(l);
+  }));
   const leaders = document.getElementById('leaders');
   leaders.innerHTML = '<h2>Leaders Today</h2>';
-  tokens.forEach(t => {
+  lvls.forEach(l => {
     const scored = groupRows
-      .filter(e => e.classes.includes(t) && numScore(e) !== null && numScore(e) > 0)
+      .filter(e => e.classes.some(t => levelOf(t) === l) && numScore(e) !== null && numScore(e) > 0)
       .sort((a, b) => numScore(b) - numScore(a))
       .slice(0, 3);
     if (!scored.length) return;
-    leaders.innerHTML += `<div class="lead-box"><div class="cls">${CLASS_LABELS[t] || t}</div>` +
+    leaders.innerHTML += `<div class="lead-box"><div class="cls">${l}</div>` +
       scored.map(e => `<div class="row"><span class="nm">${e.rider}</span><span class="sc">${e.score}</span></div>`).join('') +
       `</div>`;
   });
