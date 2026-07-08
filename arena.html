@@ -179,7 +179,20 @@ function toEntries(grid) {
 }
 
 const isDrag = e => /drag/i.test(e.note) && !e.rider;
-const isDone = e => e.score !== '';
+
+/** Drag rows never receive scores, so their completion is INFERRED:
+    a drag is over the moment any LATER row has a score — the arena
+    can't have been mid-drag while a rider behind it was being scored.
+    A pending drag (nothing scored after it yet) is the current item
+    and shows as ARENA DRAG. */
+function markDoneDrags(entries) {
+  let lastScored = -1;
+  entries.forEach((e, i) => { if (e.score !== '') lastScored = i; });
+  entries.forEach((e, i) => { e.dragDone = isDrag(e) && i < lastScored; });
+  return entries;
+}
+
+const isDone = e => e.score !== '' || e.dragDone === true;
 const numScore = e => { const n = parseFloat(e.score); return Number.isNaN(n) ? null : n; };
 
 function render(entries) {
@@ -278,11 +291,11 @@ async function tick() {
       status.classList.remove('err');
     }
     lastGood = grid;
-    render(toEntries(grid));
+    render(markDoneDrags(toEntries(grid)));
   } catch (err) {
     status.textContent = 'connection lost — showing last data (' + err.message + ')';
     status.classList.add('err');
-    if (lastGood) render(toEntries(lastGood));
+    if (lastGood) render(markDoneDrags(toEntries(lastGood)));
   }
   setTimeout(tick, POLL_SECONDS * 1000);
 }

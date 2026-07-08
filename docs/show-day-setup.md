@@ -113,6 +113,14 @@ the next group appears automatically. The queue is the sheet itself.
 `SC` for scratches. That's it — the display follows automatically:
 current run = first row without a score.
 
+**The one rule that matters: no RIDER row stays blank.** (Drag rows are
+exempt — they retire automatically once a later run is scored.) The display treats the
+first empty Score cell as "this is happening in the arena right now" and
+waits there — a skipped row stalls the whole queue, even if every later
+row is scored. Scratch announced? Type `SC` immediately, same reflex as
+a score. (Diagnostic: the NOW card always names the exact row the
+display is waiting on.)
+
 **Evening:** copy the day's scores from the Draws tab into the class tabs
 of the entry sheet (this replaces the OCR step). Run
 `node tools/check-names.js` afterward as a hygiene check.
@@ -121,6 +129,8 @@ of the entry sheet (this replaces the OCR step). Run
 
 - **Current run** = first row whose Score is empty (drag rows count, so a
   pending DRAG shows "ARENA DRAG" in gold)
+- **Drag rows complete themselves** — no placeholder needed. A drag is
+  considered over as soon as any later row has a score
 - **Next / On Deck** = the following unscored rows
 - **Leaders Today** = top 3 entered scores per class code in the active
   group (scores of 0 and SC excluded)
