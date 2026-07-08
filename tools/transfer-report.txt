@@ -2,20 +2,18 @@ Score transfer checklist — 2026-07-08
 Read down each section, type down the matching class tab.
 NEW ROW = this rider+horse combo is not in the season sheet yet.
 
-===== GREEN AS GRASS  (2 scores) =====
-  Hazel Williamson — Sonic Voodoo                     71   << NEW ROW
-  Kami Scott — Steady Eddie                           70   << NEW ROW
-
-===== NOVICE HORSE NON PRO L1  (2 scores) =====
-  Brand New Rider — Fresh Horse                       69   << NEW ROW
-  Juston Palmer — Fo Sho                            72.5
-
-===== NOVICE HORSE NP L2  (1 scores) =====
-  Sarai Laney Williamson — Shiner Voodoo Time         73
-
-===== NOVICE HORSE NP L3  (1 scores) =====
-  Sarai Laney Williamson — Shiner Voodoo Time         73   << NEW ROW
-
 ===== NOT TRANSFERRED (no CLASS_MAP entry — intentional for non-club classes) =====
-  Green Reiner / Green as Grass :: 2:G1  (2 scores)
+  Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP :: 1:NHN1  (2 scores)
+  Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP :: 2:NHn2  (3 scores)
+  Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP :: 3:L3  (1 scores)
+  Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP :: 4:L1  (1 scores)
+  Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP :: 5:L2  (2 scores)
+  Nov Hrs NP L1 & Nov Hrs NP L2 & Nov Horse NP & Nov Hrs NP :: 6:L3  (1 scores)
+  Rookie & Primetime Rookie :: 1:Rk1  (29 scores)
+  Rookie & Primetime Rookie :: 2:R2  (14 scores)
+  Rookie & Primetime Rookie :: 3:PR  (16 scores)
+  Rookie & Primetime Rookie :: 4:R1  (17 scores)
+  Rookie & Primetime Rookie :: 5:R2  (12 scores)
+  Rookie & Primetime Rookie :: 6:PTR  (10 scores)
 
+No transferable scores found — is CLASS_MAP filled in for these groups?
