@@ -29,10 +29,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const { parseCsv, transformSheetRows } = require('../js/data.js');
+const { parseCsv, transformSheetRows, parseGagTracker } = require('../js/data.js');
 
 const PUBLISHED_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSwJmc6cAJJqGb4JeR-NSG3H9RTjbrmP3meTDJZ43vcj1NDUTHfZYmw09OFS-SADZDRjFgyEpX0_cBj/pub?gid=648253065&single=true&output=csv';
+
+const GAG_TRACKER_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTVxclMfxxGILoFaHAsIWzB7hABrnSCT-p4noo0YoIPdEe77C3v70lAOkofWKhZrUoKC776YlZRXYm/pub?gid=1641467833&single=true&output=csv';
 
 const REPORT_PATH = path.join(__dirname, 'name-report.txt');
 
@@ -64,14 +67,29 @@ function editDistance(a, b) {
   return prev[n];
 }
 
+/** Season CSV: local file as arg 1, or fetched live */
 async function getCsvText() {
   const fileArg = process.argv[2];
   if (fileArg) {
-    console.log(`Reading local file: ${fileArg}`);
+    console.log(`Reading local season file: ${fileArg}`);
     return fs.readFileSync(fileArg, 'utf8');
   }
-  console.log('Fetching published CSV from Google…');
+  console.log('Fetching published season CSV from Google…');
   const resp = await fetch(PUBLISHED_CSV_URL);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.text();
+}
+
+/** GaG tracker CSV: local file as arg 2, or fetched live. Optional —
+    if it can't be loaded, the tracker cross-check section is skipped. */
+async function getTrackerCsvText() {
+  const fileArg = process.argv[3];
+  if (fileArg) {
+    console.log(`Reading local tracker file: ${fileArg}`);
+    return fs.readFileSync(fileArg, 'utf8');
+  }
+  console.log('Fetching GaG Tracker CSV from Google…');
+  const resp = await fetch(GAG_TRACKER_CSV_URL);
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   return resp.text();
 }
@@ -141,6 +159,48 @@ async function main() {
     if (!near) log('  No near-matches found.');
     log();
   }
+
+  // ----- GaG tracker cross-check ---------------------------------------
+  // The GaG view joins tracker riders to season riders BY NAME. A spelling
+  // mismatch silently splits a rider's lifetime total — a 45-point rider
+  // could cross 50 invisibly. So: every tracker name that ALMOST matches a
+  // season rider name gets flagged.
+  log('===== GAG TRACKER vs SEASON RIDERS =====');
+  try {
+    const tracker = parseGagTracker(parseCsv(await getTrackerCsvText()));
+    const seasonRiders = new Map(); // normalized → exact spelling
+    [...seen.values()].filter(v => v.kind === 'rider')
+      .forEach(v => seasonRiders.set(normalize(v.name), v.name));
+
+    // Duplicates INSIDE the tracker
+    const trackNorms = new Map();
+    tracker.forEach(t => {
+      const n = normalize(t.rider);
+      if (trackNorms.has(n)) log(`  DUPLICATE TRACKER ROW: "${trackNorms.get(n)}" and "${t.rider}"`);
+      else trackNorms.set(n, t.rider);
+    });
+
+    // Tracker vs season: exact-normalized match = fine; near match = flag.
+    // No match at all is fine too — most tracker riders are archived.
+    let flagged = 0;
+    tracker.forEach(t => {
+      const n = normalize(t.rider);
+      if (seasonRiders.has(n)) return; // joined correctly
+      for (const [sn, exact] of seasonRiders) {
+        const d = editDistance(n, sn);
+        if (d > 0 && d <= 2) {
+          flagged++;
+          log(`  JOIN RISK (edit distance ${d}) — these will NOT merge:`);
+          log(`      tracker: "${t.rider}"  (${t.prev} pts carryover)`);
+          log(`      season:  "${exact}"`);
+        }
+      }
+    });
+    if (!flagged) log('  No tracker/season near-mismatches found.');
+  } catch (err) {
+    log(`  Tracker unavailable — cross-check skipped (${err.message})`);
+  }
+  log();
 
   fs.writeFileSync(REPORT_PATH, lines.join('\n') + '\n');
   console.log(`Full report saved to ${REPORT_PATH}`);

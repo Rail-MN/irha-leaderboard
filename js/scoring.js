@@ -224,7 +224,68 @@ function getPlacePtsGreenAsGrass(entries, showIdx) {
   return { pts, place };
 }
 
+
+/** Lifetime points needed to graduate and earn the belt buckle */
+const GAG_GRADUATION_PTS = 50;
+
+/**
+ * Rider-level graduation progress: sums this season's GaG points per
+ * RIDER (across all their horses), adds lifetime carryover from the
+ * tracker, and flags graduates. Names are joined on a normalized key
+ * (lowercase, punctuation stripped) so minor spelling drift between the
+ * tracker and entry sheet doesn't split a rider's total.
+ *
+ * @param {Array}      entries   - GaG rider+horse entries with scores
+ * @param {Array|null} carryover - [{rider, prev, lastShown}] from tracker
+ * @param {number}     numShows  - shows in the season
+ * @returns rows sorted by lifetime total, each:
+ *   { rider, prev, seasonPts, total, graduated, newGrad, active }
+ */
+function buildGagProgress(entries, carryover, numShows) {
+  const keyOf = n => n.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const showData = [];
+  for (let si = 0; si < numShows; si++) showData.push(getPlacePtsGreenAsGrass(entries, si));
+
+  const byRider = new Map();
+  entries.forEach((e, ei) => {
+    let pts = 0, shows = 0;
+    for (let si = 0; si < numShows; si++) {
+      const p = showData[si].pts[ei];
+      if (p !== null) { pts += p; shows++; }
+    }
+    const k = keyOf(e.rider);
+    const cur = byRider.get(k) || { rider: e.rider, seasonPts: 0, seasonShows: 0, prev: 0, lastShown: null };
+    cur.seasonPts += pts;
+    cur.seasonShows += shows;
+    byRider.set(k, cur);
+  });
+
+  (carryover || []).forEach(c => {
+    const k = keyOf(c.rider);
+    const cur = byRider.get(k) || { rider: c.rider, seasonPts: 0, seasonShows: 0, prev: 0, lastShown: null };
+    cur.prev = c.prev;
+    cur.lastShown = c.lastShown;
+    byRider.set(k, cur);
+  });
+
+  return [...byRider.values()].map(r => {
+    const total = parseFloat((r.prev + r.seasonPts).toFixed(2));
+    const graduated = total >= GAG_GRADUATION_PTS;
+    return {
+      ...r,
+      seasonPts: parseFloat(r.seasonPts.toFixed(2)),
+      total,
+      graduated,
+      // Crossed 50 THIS season — the belt-buckle moment
+      newGrad: graduated && r.prev < GAG_GRADUATION_PTS,
+      // Active = competed this season, or tracker says seen recently
+      active: r.seasonShows > 0 || (r.lastShown !== null && r.lastShown !== 'UNK'),
+    };
+  }).sort((a, b) => b.total - a.total);
+}
+
 /* Node.js export guard for command-line tests; browsers skip this. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { PLACE_PTS, getPlacePts, buildRows, rankRows, GAG_PLACE_PTS, getPlacePtsGreenAsGrass };
+  module.exports = { PLACE_PTS, getPlacePts, buildRows, rankRows, GAG_PLACE_PTS, getPlacePtsGreenAsGrass, buildGagProgress, GAG_GRADUATION_PTS };
 }

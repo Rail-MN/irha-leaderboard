@@ -52,6 +52,23 @@ function renderLevelNav() {
 
 function render() {
   const shows = seasonData.season.shows;
+
+  // GaG is a different kind of class: rider-level graduation progress,
+  // no per-show detail or year-end toggle. Route it to its own view.
+  const isGag = activeClass === 'Green as Grass';
+  document.querySelector('.view-toggle').style.display = isGag ? 'none' : '';
+  if (isGag) {
+    const entries = seasonData.classes['Green as Grass'].data['All'] || [];
+    const gag = seasonData.gag || { carryover: null, error: 'not loaded' };
+    const rows = buildGagProgress(entries, gag.carryover, shows.length);
+    const grads = rows.filter(r => r.graduated).length;
+    document.getElementById('rowCount').textContent =
+      `${rows.filter(r => r.active).length} active riders · ${grads} graduated`;
+    document.getElementById('tableWrap').innerHTML = renderGagProgress(rows, gag.error);
+    reportHeight();
+    return;
+  }
+
   const entries = seasonData.classes[activeClass].data[activeLevel];
 
   // The pipeline: raw entries → computed rows → ranked rows → HTML

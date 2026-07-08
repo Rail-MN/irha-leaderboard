@@ -1,5 +1,5 @@
-Name hygiene report — generated 2026-07-07 18:35:20
-Names scanned: 363 distinct spellings (riders + horses)
+Name hygiene report — generated 2026-07-08 00:50:22
+Names scanned: 372 distinct spellings (riders + horses)
 This report is informational only — nothing has been changed.
 
 ===== RIDERS =====
@@ -20,10 +20,13 @@ This report is informational only — nothing has been changed.
       "Lisa Oakeson"  — appears in: PRIME TIME ROOKIE, NOVICE HORSE NON PRO L1
 
   POSSIBLE MATCH (edit distance 1 — verify before changing anything):
+      "Kriston N. Hill"  — ROOKIE LEVEL 1, LIMITED NON PRO, MARES NON PRO
+      "Kriston Hill"  — GREEN AS GRASS
+  POSSIBLE MATCH (edit distance 1 — verify before changing anything):
       "Peter Lodder"  — ROOKIE LEVEL 2, INTERMEDIATE NON PRO, STALLIONS GELDINGS NON PRO, MASTERS NON PRO
       "Pete Lodder"  — NOVICE HORSE NP L2
   POSSIBLE MATCH (edit distance 1 — verify before changing anything):
-      "Gabriela Harmsen"  — YOUTH 13 & UNDER, LIMITED NON PRO
+      "Gabriela Harmsen"  — YOUTH 13 & UNDER, LIMITED NON PRO, GREEN AS GRASS
       "Gabriala Harmsen"  — NOVICE HORSE NP L2
   POSSIBLE MATCH (edit distance 1 — verify before changing anything):
       "Diance Stuart"  — NOVICE HORSE NP L3
@@ -49,4 +52,9 @@ This report is informational only — nothing has been changed.
   POSSIBLE MATCH (edit distance 2 — verify before changing anything):
       "Wind Er Up Wimp"  — YOUTH 14 TO 18
       "Winder Er Up Wimp"  — NOVICE HORSE NP L3
+
+===== GAG TRACKER vs SEASON RIDERS =====
+  JOIN RISK (edit distance 1) — these will NOT merge:
+      tracker: "Mark Mackey"  (8.5 pts carryover)
+      season:  "Mark S Mackey"
 

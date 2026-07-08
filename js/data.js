@@ -52,6 +52,19 @@ const SEASON_TITLE = 'IRHA — 2026 Season';
 const PUBLISHED_CSV_URL =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSwJmc6cAJJqGb4JeR-NSG3H9RTjbrmP3meTDJZ43vcj1NDUTHfZYmw09OFS-SADZDRjFgyEpX0_cBj/pub?gid=648253065&single=true&output=csv';
 
+/** Green as Grass: the graduation class. Season scores arrive through
+    MASTER FULL INFO like any class; lifetime carryover lives in its own
+    tracker sheet (Rider | Previous Points | Last Shown, where Last Shown
+    is a year or "UNK" for riders not seen recently). */
+const GAG_CLASS = 'GREEN AS GRASS';
+const GAG_NAV_LABEL = 'Green as Grass';
+const GAG_TRACKER_SHEET_ID = '1SX3pInYaUqmaXPxiTDtUJPKB95Z27a6DrIKQxCbfCTA';
+const GAG_TRACKER_TAB = 'GaG Tracker';
+/** Published-to-web CSV for the tracker — tried first (best CORS
+    behavior); the direct sheet fetch below is the fallback. */
+const GAG_TRACKER_PUBLISHED_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSTVxclMfxxGILoFaHAsIWzB7hABrnSCT-p4noo0YoIPdEe77C3v70lAOkofWKhZrUoKC776YlZRXYm/pub?gid=1641467833&single=true&output=csv';
+
 /** Optional pretty names for the show columns found in the sheet header.
     The sheet calls them "Apr", "Jun", etc. — map them to fuller labels
     here if desired, e.g. { Apr: 'S. Jordan Apr' }. Unmapped labels pass
@@ -109,6 +122,10 @@ const CLASS_GROUPS = [
   { group: 'Green Horse', levels: [
     ['GREEN HORSE OPEN', 'Open'],
     ['GREEN HORSE NP', 'Non Pro'],
+  ] },
+  // GaG renders a special graduation-progress view (see main.js/render.js)
+  { group: GAG_NAV_LABEL, levels: [
+    [GAG_CLASS, 'All'],
   ] },
 ];
 
@@ -221,6 +238,34 @@ function transformSheetRows(rows) {
 }
 
 /**
+ * Parse the GaG Tracker tab: one row per rider with their lifetime
+ * carryover. Header matching is forgiving — the "Previous Points" column
+ * is found by prefix so the documentation in its header text can change.
+ */
+function parseGagTracker(rows) {
+  const header = rows[0];
+  if (!header) throw new Error('tracker CSV was empty');
+  const riderIdx = header.findIndex(h => h.trim() === 'Rider');
+  const prevIdx = header.findIndex(h => h.trim().startsWith('Previous Points'));
+  const lastIdx = header.findIndex(h => h.trim().startsWith('Last Shown'));
+  if (riderIdx === -1 || prevIdx === -1 || lastIdx === -1) {
+    throw new Error('GaG Tracker header did not match (need Rider / Previous Points / Last Shown)');
+  }
+  const out = [];
+  rows.slice(1).forEach(r => {
+    const rider = (r[riderIdx] || '').trim();
+    if (!rider) return;
+    const prev = parseFloat((r[prevIdx] || '').trim());
+    out.push({
+      rider,
+      prev: Number.isNaN(prev) ? 0 : prev,
+      lastShown: (r[lastIdx] || '').trim().toUpperCase() || 'UNK',
+    });
+  });
+  return out;
+}
+
+/**
  * Fold the flat class list into the grouped navigation structure using
  * CLASS_GROUPS. Classes in the sheet that aren't in the config become
  * their own single-level group (defensive: new classes never vanish).
@@ -278,7 +323,32 @@ async function getSeasonData() {
     try {
       const text = await fetchCsvText(url);
       const { shows, byClass, completedShows } = transformSheetRows(parseCsv(text));
+      // GaG always appears in the nav, even before any season scores exist
+      if (!byClass[GAG_CLASS]) byClass[GAG_CLASS] = [];
+
+      // The tracker is a separate, independent fetch: if it fails, the
+      // main dashboard still works and the GaG view explains what's missing.
+      // Same fallback-chain pattern as the main season fetch
+      let gag = { carryover: null, error: null };
+      const gvizTrackerUrl =
+        `https://docs.google.com/spreadsheets/d/${GAG_TRACKER_SHEET_ID}/gviz/tq` +
+        `?tqx=out:csv&sheet=${encodeURIComponent(GAG_TRACKER_TAB)}`;
+      const trackerUrls = GAG_TRACKER_PUBLISHED_CSV_URL
+        ? [GAG_TRACKER_PUBLISHED_CSV_URL, gvizTrackerUrl]
+        : [gvizTrackerUrl];
+      for (const tUrl of trackerUrls) {
+        try {
+          gag.carryover = parseGagTracker(parseCsv(await fetchCsvText(tUrl)));
+          gag.error = null;
+          break;
+        } catch (err) {
+          console.error('GaG tracker fetch failed:', tUrl, err);
+          gag.error = err.message;
+        }
+      }
+
       return {
+        gag,
         season: {
           title: SEASON_TITLE,
           subtitle: `Must participate in at least 3 out of ${shows.length} shows for a given class ` +
@@ -302,7 +372,9 @@ async function getSeasonData() {
   // live data. Visitors see real standings — possibly outdated — plus a
   // clear warning in the title and the red error banner.
   const { shows, byClass, completedShows } = transformSheetRows(parseCsv(SNAPSHOT_CSV));
+  if (!byClass[GAG_CLASS]) byClass[GAG_CLASS] = [];
   return {
+    gag: { carryover: null, error: 'offline snapshot' },
     season: {
       title: `${SEASON_TITLE} — LIVE FETCH FAILED`,
       subtitle: `Showing saved snapshot from ${SNAPSHOT_DATE} — standings may be outdated`,
@@ -316,5 +388,5 @@ async function getSeasonData() {
 
 /* Node.js export guard for command-line tests; browsers skip this. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { parseCsv, transformSheetRows, groupClasses, CLASS_GROUPS, getSeasonData };
+  module.exports = { parseCsv, transformSheetRows, groupClasses, parseGagTracker, CLASS_GROUPS, getSeasonData };
 }

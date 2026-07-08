@@ -10,7 +10,7 @@
    it fail, then fix the code until it passes.
    ============================================================ */
 
-const { getPlacePts, buildRows, rankRows, getPlacePtsGreenAsGrass } = require('../js/scoring.js');
+const { getPlacePts, buildRows, rankRows, getPlacePtsGreenAsGrass, buildGagProgress } = require('../js/scoring.js');
 
 let passed = 0, failed = 0;
 
@@ -145,6 +145,47 @@ console.log('\nGreen as Grass (graduation class: 8..1 placing + 0.5/beat bonus)'
   assertEqual(pts[1], 0, 'zero score earns no points in GaG');
   assertEqual(pts[0], 8.5, 'winner: 8 placing + 0.5 for beating the zero scorer');
   assertEqual(place[2], null, 'scratch (null) still gets nothing');
+}
+
+// ---------------------------------------------------------------
+console.log('\nGaG graduation progress (rider-level, carryover + season)');
+
+{
+  // Rider A rides two horses in show 3: 70 (1st) and 69 (2nd); B rides 68 (3rd)
+  // A-H1: 8 + 0.5*2 = 9;  A-H2: 7 + 0.5*1 = 7.5;  B: 6 + 0 = 6
+  const entries = [
+    { rider: 'Anna Fields', horse: 'H1', scores: [null, null, 70, null] },
+    { rider: 'Anna Fields', horse: 'H2', scores: [null, null, 69, null] },
+    { rider: 'Ben Cole',    horse: 'H3', scores: [null, null, 68, null] },
+  ];
+  const carryover = [
+    { rider: 'Anna Fields', prev: 40, lastShown: '2026' },
+    { rider: 'Cara Dunn',   prev: 12, lastShown: 'UNK' },
+  ];
+  const rows = buildGagProgress(entries, carryover, 4);
+
+  const anna = rows.find(r => r.rider === 'Anna Fields');
+  assertEqual(anna.seasonPts, 16.5, 'season points sum ACROSS horses (9 + 7.5)');
+  assertEqual(anna.total, 56.5, 'lifetime total = carryover + season');
+  assertEqual(anna.graduated, true, 'graduates at 50+');
+  assertEqual(anna.newGrad, true, 'crossed 50 THIS season');
+  assertEqual(rows[0].rider, 'Anna Fields', 'sorted by lifetime total');
+
+  const ben = rows.find(r => r.rider === 'Ben Cole');
+  assertEqual(ben.total, 6, 'no carryover row → season only');
+  assertEqual(ben.active, true, 'competed this season → active');
+
+  const cara = rows.find(r => r.rider === 'Cara Dunn');
+  assertEqual(cara.active, false, 'UNK + no season scores → archive');
+  assertEqual(cara.graduated, false, '12 points, not graduated');
+}
+
+{ // Name drift between tracker and entry sheet must not split a rider
+  const entries = [{ rider: 'Kriston N. Hill', horse: 'H', scores: [null, null, 70, null] }];
+  const carryover = [{ rider: 'Kriston N Hill', prev: 45, lastShown: '2026' }];
+  const rows = buildGagProgress(entries, carryover, 4);
+  assertEqual(rows.length, 1, 'punctuation-only name variants merge');
+  assertEqual(rows[0].total, 53, 'merged total = 45 carryover + 8 (solo 1st: 8 base, nobody beaten)');
 }
 
 // ---------------------------------------------------------------

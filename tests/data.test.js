@@ -10,7 +10,7 @@
    isn't in the grouping config.
    ============================================================ */
 
-const { parseCsv, transformSheetRows, groupClasses } = require('../js/data.js');
+const { parseCsv, transformSheetRows, groupClasses, parseGagTracker } = require('../js/data.js');
 
 let passed = 0, failed = 0;
 function assertEqual(actual, expected, label) {
@@ -84,8 +84,24 @@ const classes = groupClasses(byClass);
 
 assertEqual(classes['Open'].levels, ['Open'], 'OPEN grouped under "Open" (only levels with data appear)');
 assertEqual(classes['Rookie'].levels, ['Level 1', 'Prime Time'], 'Rookie group picks up its levels in config order');
-assertEqual(classes['GREEN AS GRASS'].levels, ['All'], 'unknown class becomes its own single-level group');
-assertEqual(classes['GREEN AS GRASS'].data['All'].length, 1, 'unknown class keeps its entries');
+assertEqual(classes['Green as Grass'].levels, ['All'], 'GaG grouped under its nav label');
+assertEqual(classes['Green as Grass'].data['All'].length, 1, 'GaG keeps its entries');
+
+// ---------------------------------------------------------------
+console.log('\nparseGagTracker');
+
+{
+  const rows = parseGagTracker(parseCsv([
+    '"Rider","Previous Points (Including accumulated points through June 2026)","Last Shown"',
+    '"Hadlee Spencer","65.5","2026"',
+    '"Shelly Manning","19","UNK"',
+    '"No Points Yet","","2026"',
+  ].join('\n')));
+  assertEqual(rows.length, 3, 'all tracker rows parsed');
+  assertEqual(rows[0], { rider: 'Hadlee Spencer', prev: 65.5, lastShown: '2026' }, 'graduate row parsed');
+  assertEqual(rows[1].lastShown, 'UNK', 'UNK archive flag preserved');
+  assertEqual(rows[2].prev, 0, 'blank points default to 0');
+}
 
 // ---------------------------------------------------------------
 console.log(`\n${passed} passed, ${failed} failed`);

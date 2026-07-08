@@ -51,6 +51,16 @@ body {
   border: 0;
 }
 
+/* Association header art on a light card (dark logo needs light backing) */
+.header-banner {
+  background: #f5f3ef;
+  border-radius: var(--border-radius-lg);
+  padding: 10px 18px;
+  margin: 0 auto 1rem;
+  max-width: 560px;
+}
+.header-banner img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+
 /* Header block is centered; nav and tables stay left-aligned */
 h1 { font-size: 20px; font-weight: 500; margin-bottom: 3px; text-align: center; }
 
@@ -252,3 +262,33 @@ td.l { text-align: left; }
   border-right: 0.5px solid var(--color-border-secondary);
 }
 .show-grp-blank { border-bottom: 0.5px solid var(--color-border-tertiary); }
+
+/* ---------- Green as Grass progress view ---------- */
+
+.gag-caption { font-size: 12px; color: var(--color-text-secondary); padding: 10px 12px 2px; }
+.gag-warning { font-size: 12px; color: #e8b4b4; padding: 8px 12px 0; }
+
+/* Progress bar toward the 50-point graduation */
+.gag-bar-track {
+  height: 10px;
+  border-radius: 99px;
+  background: var(--color-background-secondary);
+  overflow: hidden;
+  min-width: 120px;
+}
+.gag-bar-fill { height: 100%; background: var(--color-accent); border-radius: 99px; }
+.gag-bar-fill.grad { background: #FAC775; }  /* gold once graduated */
+
+.grad-pill {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: #FAC775;
+  color: #412402;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+/* Archive of riders not seen recently — native collapsible element */
+details.gag-archive { padding: 4px 12px 12px; }
+details.gag-archive summary { cursor: pointer; font-size: 12px; color: var(--color-text-secondary); padding: 6px 0; }

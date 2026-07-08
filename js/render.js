@@ -158,3 +158,62 @@ function renderSummary(rows, shows) {
   html += `</tbody></table>`;
   return html;
 }
+
+/**
+ * View 3: Green as Grass graduation progress.
+ * One row per RIDER: progress bar toward 50 lifetime points, carryover,
+ * this season's computed points, lifetime total, GRADUATED badge.
+ * Riders not seen recently collapse into a native <details> archive.
+ *
+ * @param {Array}       rows     - from buildGagProgress (sorted by total)
+ * @param {string|null} gagError - set when the tracker fetch failed
+ */
+function renderGagProgress(rows, gagError) {
+  const active = rows.filter(r => r.active);
+  const archive = rows.filter(r => !r.active);
+
+  let html = `<div class="gag-caption">Riders graduate — and earn the belt buckle — at ` +
+    `50 lifetime points. Previous points cover everything through the June 2026 show; ` +
+    `later shows are computed from scores as they come in.</div>`;
+
+  if (gagError) {
+    html += `<div class="gag-warning">Lifetime carryover unavailable (${gagError}) — ` +
+      `totals below reflect computed season points only.</div>`;
+  }
+
+  html += gagTable(active);
+  if (archive.length) {
+    html += `<details class="gag-archive"><summary>Riders not seen recently (${archive.length})</summary>` +
+      gagTable(archive) + `</details>`;
+  }
+  return html;
+}
+
+/** The shared table used for both the active list and the archive */
+function gagTable(rows) {
+  let html = `<table class="gag-tbl" style="width:100%"><colgroup>
+    <col><col style="width:34%"><col style="width:86px"><col style="width:86px"><col style="width:76px">
+  </colgroup><thead><tr style="background:var(--color-background-secondary)">
+    <th class="l">Rider</th>
+    <th class="l">Progress to 50</th>
+    <th>Previous</th>
+    <th>2026</th>
+    <th>Total</th>
+  </tr></thead><tbody>`;
+
+  rows.forEach((r, idx) => {
+    const bg = idx % 2 === 0 ? BG_EVEN : BG_ODD;
+    const pct = Math.min(100, (r.total / 50) * 100).toFixed(1);
+    const grad = r.graduated ? `<span class="grad-pill" title="50+ lifetime points — belt buckle earned!">GRADUATED</span>` : '';
+    html += `<tr style="background:${bg}"` +
+      ` onmouseover="this.style.filter='brightness(1.25)'"` +
+      ` onmouseout="this.style.filter=''">`;
+    html += `<td class="l"><span class="rider">${r.rider}</span>${grad}</td>`;
+    html += `<td class="l"><div class="gag-bar-track"><div class="gag-bar-fill${r.graduated ? ' grad' : ''}" style="width:${pct}%"></div></div></td>`;
+    html += `<td>${fmtNum(r.prev)}</td>`;
+    html += `<td>${fmtNum(r.seasonPts)}</td>`;
+    html += `<td style="font-weight:500">${fmtNum(r.total)}</td></tr>`;
+  });
+
+  return html + `</tbody></table>`;
+}
