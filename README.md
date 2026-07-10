@@ -1,6 +1,6 @@
 # IRHA Reining Leaderboard
 
-A live standings dashboard for the Idaho Reining Horse Association's
+A live standings dashboard for the Intermountain Reining Horse Association's
 4-show season. Scores are entered into Google Sheets; everything
 downstream — placements, tie-split points, qualification, the low-score
 drop, and year-end ranking — is computed automatically and displayed on
