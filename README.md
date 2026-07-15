@@ -20,10 +20,15 @@ won't load live data — browsers block Google fetches from file:// pages.)
 Other commands, run from the project folder:
 
 ```
-node tests/scoring.test.js   # test the scoring rules engine
-node tests/data.test.js      # test CSV parsing / sheet transformation
-node tools/make-snapshot.js  # refresh the offline fallback snapshot
+node tests/scoring.test.js         # test the scoring rules engine
+node tests/data.test.js            # test CSV parsing / sheet transformation
+node tools/make-snapshot.js        # refresh the offline fallback snapshot
+node tools/import-draws.js incoming  # show mornings: secretary CSVs → paste-ready TSV
+node tools/transfer-report.js      # show evenings: checklist for entering scores
+node tools/check-names.js          # report likely rider/horse name variants
 ```
+
+Full command reference: `docs/cheat-sheet.md`.
 
 ## How data flows
 
@@ -56,16 +61,50 @@ own place/points columns are reference only.
 - 4-show participants drop their lowest points result; 3-show
   participants keep all three
 
-The "Green as Grass" class has special scoring and is not yet handled.
+**Green as Grass** has its own rules engine and its own view:
+
+- Per-show points: 1st = 8 … 8th = 1 (ties pool and split), plus a
+  0.5 bonus per rider beaten (strictly lower score, including zeros)
+- A score of 0 places last and earns nothing
+- Points accumulate per RIDER across horses and across seasons —
+  carryover comes from the "GaG Tracker" sheet
+- At 50 lifetime points a rider graduates (earns the buckle); the
+  dashboard's GaG tab shows a progress bar per rider, pins new
+  graduates to the top as a buckle to-do list, and tucks riders not
+  seen this season into an archive section
+
+## Show day (arena display & live scores)
+
+`arena.html` is a self-contained 1080p display for the arena TV and the
+livestream (OBS browser source). It polls a separate Show Day Google
+Sheet — the day's draw list, imported each morning by
+`tools/import-draws.js` — and shows the current run, next / on deck,
+a draw-order window, and today's class leaders. Scores typed into the
+sheet appear within seconds; an Overlay tab of formulas feeds the H2R
+lower-third graphics from the same data. In the evening,
+`tools/transfer-report.js` turns the day's scores into a checklist for
+entering them into the season sheet. Full walkthrough:
+`docs/show-day-setup.md`.
 
 ## Project layout
 
 ```
-index.html          page skeleton
+index.html          leaderboard page skeleton
+arena.html          show-day TV/OBS display (self-contained, own data source)
 css/styles.css      all styling (theme variables in :root)
 js/                 data layer, rules engine, views, controller
-tests/              command-line tests (44+ assertions)
-tools/serve.js      local dev server
-tools/make-snapshot.js  regenerates js/sample-data.js from the live sheet
-claude_code_handoff.md  original project brief
+   sample-data.js   generated offline snapshot (don't edit by hand)
+tests/              command-line tests (81 assertions)
+tools/
+   serve.js            local dev server
+   make-snapshot.js    regenerates js/sample-data.js from the live sheet
+   import-draws.js     secretary OOG CSVs → draws-import.tsv (show mornings)
+   transfer-report.js  evening score-entry checklist (writes transfer-report.txt)
+   check-names.js      name-variant report (writes name-report.txt)
+docs/
+   show-day-setup.md   show-day sheet, Apps Script, OBS, Overlay formulas
+   cheat-sheet.md      command-line & troubleshooting reference
+   claude_code_handoff.md  original project brief
+incoming/           gitignored drop zone for the day's secretary CSVs
+reining_leaderboard.html  the original single-file prototype (historical)
 ```
