@@ -1,0 +1,5 @@
+# This file exists so git keeps the incoming/ folder in the repository
+# (git tracks files, not folders — an empty folder would vanish on pull).
+# Drop the day's secretary CSVs in this folder, then run:
+#   node tools/import-draws.js incoming
+# CSVs here are gitignored and never leave this machine.

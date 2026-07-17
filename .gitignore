@@ -17,3 +17,8 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Secretary CSV drop zone: the CSVs stay local (they can carry more
+# rider info than the public paper draw sheets), but the folder itself
+# survives clones/pulls thanks to the tracked incoming/.gitkeep file.
+incoming/*.csv
