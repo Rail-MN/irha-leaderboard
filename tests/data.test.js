@@ -98,9 +98,23 @@ console.log('\nparseGagTracker');
     '"No Points Yet","","2026"',
   ].join('\n')));
   assertEqual(rows.length, 3, 'all tracker rows parsed');
-  assertEqual(rows[0], { rider: 'Hadlee Spencer', prev: 65.5, lastShown: '2026' }, 'graduate row parsed');
+  assertEqual(rows[0], { rider: 'Hadlee Spencer', prev: 65.5, lastShown: '2026', archived: false }, 'graduate row parsed');
   assertEqual(rows[1].lastShown, 'UNK', 'UNK archive flag preserved');
   assertEqual(rows[2].prev, 0, 'blank points default to 0');
+  // No Archived column in this layout — everyone parses as not archived
+  assertEqual(rows.map(r => r.archived), [false, false, false], 'missing Archived column → nobody archived');
+}
+
+{ // Archived column (added July 2026): any non-blank value counts
+  const rows = parseGagTracker(parseCsv([
+    '"Rider","Previous Points","Last Shown","Archived"',
+    '"Gabriela Harmsen","55","2026","7/20/2026"',
+    '"Hadlee Spencer","65.5","2026","Y"',
+    '"Shelly Manning","19","UNK",""',
+  ].join('\n')));
+  assertEqual(rows[0].archived, true, 'a date in Archived marks the rider archived');
+  assertEqual(rows[1].archived, true, 'a "Y" works too — any non-blank value');
+  assertEqual(rows[2].archived, false, 'blank Archived cell → not archived');
 }
 
 // ---------------------------------------------------------------

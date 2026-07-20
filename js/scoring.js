@@ -236,10 +236,10 @@ const GAG_GRADUATION_PTS = 50;
  * tracker and entry sheet doesn't split a rider's total.
  *
  * @param {Array}      entries   - GaG rider+horse entries with scores
- * @param {Array|null} carryover - [{rider, prev, lastShown}] from tracker
+ * @param {Array|null} carryover - [{rider, prev, lastShown, archived}] from tracker
  * @param {number}     numShows  - shows in the season
  * @returns rows sorted by lifetime total, each:
- *   { rider, prev, seasonPts, total, graduated, newGrad, active }
+ *   { rider, prev, seasonPts, total, graduated, newGrad, active, archived }
  */
 function buildGagProgress(entries, carryover, numShows) {
   const keyOf = n => n.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -266,21 +266,29 @@ function buildGagProgress(entries, carryover, numShows) {
     const cur = byRider.get(k) || { rider: c.rider, seasonPts: 0, seasonShows: 0, prev: 0, lastShown: null };
     cur.prev = c.prev;
     cur.lastShown = c.lastShown;
+    cur.archivedFlag = !!c.archived;
     byRider.set(k, cur);
   });
 
   return [...byRider.values()].map(r => {
     const total = parseFloat((r.prev + r.seasonPts).toFixed(2));
     const graduated = total >= GAG_GRADUATION_PTS;
+    const newGrad = graduated && r.prev < GAG_GRADUATION_PTS;
     return {
       ...r,
       seasonPts: parseFloat(r.seasonPts.toFixed(2)),
       total,
       graduated,
       // Crossed 50 THIS season — the belt-buckle moment
-      newGrad: graduated && r.prev < GAG_GRADUATION_PTS,
+      newGrad,
       // Active = competed this season, or tracker says seen recently
       active: r.seasonShows > 0 || (r.lastShown !== null && r.lastShown !== 'UNK'),
+      // Archived (moves to the Graduates section) only when the tracker
+      // flag is set AND the rider really graduated AND the buckle has been
+      // acknowledged. Two safety valves: a flag on a non-graduate is
+      // ignored (a data slip can't hide an active rider), and newGrad
+      // wins over an early flag (the buckle to-do list can't be hidden).
+      archived: !!r.archivedFlag && graduated && !newGrad,
     };
   }).sort((a, b) => {
     // NEW graduates pin to the top — they're the "needs a buckle" list.

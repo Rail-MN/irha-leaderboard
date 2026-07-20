@@ -44,12 +44,13 @@ blank until a rider actually competes (a 0 in a *Score* column means
 
 **3. GaG Tracker sheet**
 Lifetime Green as Grass carryover. Machine-friendly tab `GaG Tracker`
-with columns Rider | Previous Points | Last Shown. **The double-counting
-rule:** Previous Points covers everything through the June 2026 show,
-and the season sheet's GaG tab keeps April and June *blank* — new GaG
-scores are entered only from the July show onward. Carryover and season
-points therefore never overlap. (Roadmap item 2 adds an `Archived`
-column here for graduate archiving.)
+with columns Rider | Previous Points | Last Shown | Archived. **The
+double-counting rule:** Previous Points covers everything through the
+June 2026 show, and the season sheet's GaG tab keeps April and June
+*blank* — new GaG scores are entered only from the July show onward.
+Carryover and season points therefore never overlap. Any non-blank
+value in `Archived` (a date or `Y`) moves a graduate into the
+dashboard's collapsible Graduates section.
 
 **4. Show Day sheet ("IRHA Show Day")**
 The live sheet used at the show. Tab `Draws` (Group | Draw | Rider |
@@ -259,9 +260,8 @@ formulas — is the source of truth for placements and points.
 6. GaG follow-ups, if anyone crossed 50 this weekend: they'll be pinned
    to the top of the GaG view with a NEW GRADUATE pill. After the buckle
    is delivered, fold their season points into `Previous Points` in the
-   GaG Tracker (which clears the pill), and — once the archive feature
-   ships — set their `Archived` flag to move them to the Graduates
-   section.
+   GaG Tracker (which clears the pill), then set their `Archived` cell
+   (date or `Y`) to move them into the Graduates section.
 
 ---
 
@@ -292,7 +292,10 @@ After changing any rule, run both test files.
 
 ### GaG tracker upkeep
 
-- Columns: Rider | Previous Points | Last Shown (year, or `UNK`).
+- Columns: Rider | Previous Points | Last Shown (year, or `UNK`) |
+  Archived (blank = shown normally; any value archives a *graduate* —
+  the flag is ignored on non-graduates, and a NEW GRADUATE pin always
+  wins, so a stray value can't hide anyone who matters).
 - Previous Points covers through June 2026; season GaG entry starts with
   the July show (April/June deliberately blank in the GaG tab). Keep
   this boundary in mind any time carryover is edited — a show's points

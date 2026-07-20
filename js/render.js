@@ -163,14 +163,21 @@ function renderSummary(rows, shows) {
  * View 3: Green as Grass graduation progress.
  * One row per RIDER: progress bar toward 50 lifetime points, carryover,
  * this season's computed points, lifetime total, GRADUATED badge.
- * Riders not seen recently collapse into a native <details> archive.
+ *
+ * Three sections, each rider appearing in exactly one:
+ *   1. the active list (newGrads pinned on top by the sort);
+ *   2. "Graduates" — archived graduates, an honor roll kept separate from
+ *      riders who merely drifted away;
+ *   3. "Riders not seen recently" — everyone inactive and not archived.
+ * Sections 2 and 3 are native <details> elements (collapsed by default).
  *
  * @param {Array}       rows     - from buildGagProgress (sorted by total)
  * @param {string|null} gagError - set when the tracker fetch failed
  */
 function renderGagProgress(rows, gagError) {
-  const active = rows.filter(r => r.active);
-  const archive = rows.filter(r => !r.active);
+  const graduates = rows.filter(r => r.archived);
+  const active = rows.filter(r => !r.archived && r.active);
+  const archive = rows.filter(r => !r.archived && !r.active);
 
   let html = `<div class="gag-caption">Riders graduate — and earn the belt buckle — at ` +
     `50 lifetime points. Previous points cover everything through the June 2026 show; ` +
@@ -182,6 +189,10 @@ function renderGagProgress(rows, gagError) {
   }
 
   html += gagTable(active);
+  if (graduates.length) {
+    html += `<details class="gag-archive"><summary>Graduates (${graduates.length})</summary>` +
+      gagTable(graduates) + `</details>`;
+  }
   if (archive.length) {
     html += `<details class="gag-archive"><summary>Riders not seen recently (${archive.length})</summary>` +
       gagTable(archive) + `</details>`;

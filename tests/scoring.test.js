@@ -192,6 +192,23 @@ console.log('\nGaG graduation progress (rider-level, carryover + season)');
   assertEqual(rows[1].newGrad, false, 'prev >= 50 means not new — folding points into carryover clears the pin');
 }
 
+{ // Archiving (manual flag from the tracker's Archived column)
+  const entries = [{ rider: 'Riser', horse: 'H', scores: [null, null, 70, null] }];
+  const carryover = [
+    { rider: 'Old Grad',  prev: 80, lastShown: '2026', archived: true },  // buckle delivered
+    { rider: 'Riser',     prev: 45, lastShown: '2026', archived: true },  // flag set EARLY — newGrad wins
+    { rider: 'Data Slip', prev: 12, lastShown: '2026', archived: true },  // non-grad flagged by mistake
+    { rider: 'Honor Roll', prev: 60, lastShown: '2026' },                 // grad, flag not set yet
+  ];
+  const rows = buildGagProgress(entries, carryover, 4);
+  const get = n => rows.find(r => r.rider === n);
+  assertEqual(get('Old Grad').archived, true, 'archived graduate leaves the active list');
+  assertEqual(get('Riser').archived, false, 'newGrad overrides an early archive flag — buckle list can\'t be hidden');
+  assertEqual(rows[0].rider, 'Riser', 'flagged new grad still pins to top');
+  assertEqual(get('Data Slip').archived, false, 'archive flag on a NON-graduate is ignored (data slip)');
+  assertEqual(get('Honor Roll').archived, false, 'graduate without the flag stays put — blank column = today\'s behavior');
+}
+
 { // Name drift between tracker and entry sheet must not split a rider
   const entries = [{ rider: 'Kriston N. Hill', horse: 'H', scores: [null, null, 70, null] }];
   const carryover = [{ rider: 'Kriston N Hill', prev: 45, lastShown: '2026' }];

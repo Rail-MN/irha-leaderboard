@@ -248,6 +248,10 @@ function parseGagTracker(rows) {
   const riderIdx = header.findIndex(h => h.trim() === 'Rider');
   const prevIdx = header.findIndex(h => h.trim().startsWith('Previous Points'));
   const lastIdx = header.findIndex(h => h.trim().startsWith('Last Shown'));
+  // Optional column (added July 2026): any non-blank value (a date, "Y",
+  // etc.) marks a graduate as archived. Older tracker layouts without the
+  // column keep working — everyone simply parses as not-archived.
+  const archIdx = header.findIndex(h => h.trim().startsWith('Archived'));
   if (riderIdx === -1 || prevIdx === -1 || lastIdx === -1) {
     throw new Error('GaG Tracker header did not match (need Rider / Previous Points / Last Shown)');
   }
@@ -260,6 +264,7 @@ function parseGagTracker(rows) {
       rider,
       prev: Number.isNaN(prev) ? 0 : prev,
       lastShown: (r[lastIdx] || '').trim().toUpperCase() || 'UNK',
+      archived: archIdx !== -1 && (r[archIdx] || '').trim() !== '',
     });
   });
   return out;

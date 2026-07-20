@@ -13,7 +13,7 @@ sheet's Apps Script endpoint. The show-day toolkit exists end to end:
 morning draw import, live scoring in one cell per run, the Overlay tab
 feeding H2R graphics, an evening transfer checklist, and name-hygiene
 checks. Two of four shows are complete (April, June); scoring rules are
-implemented and covered by 81 test assertions.
+implemented and covered by 90 test assertions.
 
 ---
 
@@ -43,7 +43,15 @@ auto-fills a Score from it). Classes not in the season points program
 so their scores surface in the report's "not transferred" section rather
 than being guessed.
 
-### 2. GaG graduate archiving (requested feature)
+### 2. GaG graduate archiving (requested feature) — ✅ DONE July 20, 2026
+
+Shipped as specced below. One behavior confirmed during build: an
+`Archived` flag on a rider who has NOT graduated is ignored (they stay
+in the normal list, governed by Last Shown) — the Graduates section is
+strictly an honor roll. **Earmarked for later:** today "not seen
+recently" is manual (`Last Shown` = `UNK`); once past seasons accumulate
+real years, auto-hide riders whose Last Shown is more than two years
+back. Small change in `buildGagProgress`'s `active` test when wanted.
 
 **Problem:** graduates never leave the Green as Grass board. Since the
 GaG view sorts by lifetime total, every past graduate sits above every
